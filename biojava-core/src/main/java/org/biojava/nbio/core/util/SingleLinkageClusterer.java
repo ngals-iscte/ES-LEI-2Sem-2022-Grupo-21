@@ -20,6 +20,7 @@
  */
 package org.biojava.nbio.core.util;
 
+import org.biojava.nbio.core.util.SingleLinkageClustererProduct.LinkedPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,59 +37,17 @@ import java.util.*;
  */
 public class SingleLinkageClusterer {
 
+	private SingleLinkageClustererProduct singleLinkageClustererProduct = new SingleLinkageClustererProduct();
+
 	private static final Logger logger = LoggerFactory.getLogger(SingleLinkageClusterer.class);
 
-	private class LinkedPair {
+	double[][] matrix;
 
-		private int first;
-		private int second;
-		private double closestDistance;
+	int numItems;
 
-		public LinkedPair(int first, int second, double minDistance) {
-			this.first = first;
-			this.second = second;
-			this.closestDistance = minDistance;
-		}
-
-		public int getFirst() {
-			return first;
-		}
-
-		public int getSecond() {
-			return second;
-		}
-
-		public double getClosestDistance() {
-			return closestDistance;
-		}
-
-		@Override
-		public String toString() {
-
-			String closestDistStr = null;
-			if (closestDistance==Double.MAX_VALUE) {
-				closestDistStr = String.format("%6s", "inf");
-			} else {
-				closestDistStr = String.format(Locale.US, "%6.2f",closestDistance);
-			}
-
-			return "["+first+","+second+"-"+closestDistStr+"]";
-		}
-
-	}
-
-	private double[][] matrix;
-
-	private boolean isScoreMatrix;
-
-	private int numItems;
-
-	private LinkedPair[] dendrogram;
+	LinkedPair[] dendrogram;
 
 	//private Set<Integer> toSkip;
-
-	private ArrayList<Integer> indicesToCheck;
-
 
 	/**
 	 * Constructs a new SingleLinkageClusterer
@@ -103,7 +62,7 @@ public class SingleLinkageClusterer {
 	 */
 	public SingleLinkageClusterer(double[][] matrix, boolean isScoreMatrix) {
 		this.matrix = matrix;
-		this.isScoreMatrix = isScoreMatrix;
+		singleLinkageClustererProduct.setIsScoreMatrix(isScoreMatrix);
 
 		if (matrix.length!=matrix[0].length) {
 			throw new IllegalArgumentException("Distance matrix for clustering must be a square matrix");
@@ -135,13 +94,13 @@ public class SingleLinkageClusterer {
 		dendrogram = new LinkedPair[numItems-1];
 
 
-		logger.debug("Initial matrix: \n"+matrixToString());
+		logger.debug("Initial matrix: \n"+singleLinkageClustererProduct.matrixToString(this));
 
 
 		for (int m=0;m<numItems-1;m++) {
 
 			updateIndicesToCheck(m);
-			LinkedPair pair = getClosestPair();
+			LinkedPair pair = singleLinkageClustererProduct.getClosestPair(this.matrix, this);
 			merge(pair);
 			dendrogram[m] = pair;
 
@@ -164,23 +123,9 @@ public class SingleLinkageClusterer {
 		int second = closestPair.getSecond();
 
 		for (int other=0;other<numItems;other++) {
-			matrix[Math.min(first,other)][Math.max(first, other)] = link(getDistance(first, other), getDistance(second, other));
+			matrix[Math.min(first,other)][Math.max(first, other)] = singleLinkageClustererProduct.link(getDistance(first, other), getDistance(second, other));
 		}
 
-	}
-
-	/**
-	 * The linkage function: minimum of the 2 distances (i.e. single linkage clustering)
-	 * @param d1
-	 * @param d2
-	 * @return
-	 */
-	private double link(double d1, double d2) {
-		if (isScoreMatrix) {
-			return Math.max(d1,d2);
-		} else {
-			return Math.min(d1,d2);
-		}
 	}
 
 	private double getDistance(int first, int second) {
@@ -189,54 +134,17 @@ public class SingleLinkageClusterer {
 
 	private void updateIndicesToCheck(int m) {
 
-		if (indicesToCheck==null) {
-			indicesToCheck = new ArrayList<Integer>(numItems);
+		if (singleLinkageClustererProduct.getIndicesToCheck()==null) {
+			singleLinkageClustererProduct.setIndicesToCheck(new ArrayList<Integer>(numItems));
 
 			for (int i=0;i<numItems;i++) {
-				indicesToCheck.add(i);
+				singleLinkageClustererProduct.getIndicesToCheck().add(i);
 			}
 		}
 
 		if (m==0) return;
 
-		indicesToCheck.remove(new Integer(dendrogram[m-1].getFirst()));
-	}
-
-	private LinkedPair getClosestPair() {
-
-		LinkedPair closestPair = null;
-
-		if (isScoreMatrix) {
-			double max = 0.0;
-			for (int i:indicesToCheck) {
-
-				for (int j:indicesToCheck) {
-					if (j<=i) continue;
-
-					if (matrix[i][j]>=max) {
-						max = matrix[i][j];
-						closestPair = new LinkedPair(i,j,max);
-					}
-
-				}
-			}
-		} else {
-			double min = Double.MAX_VALUE;
-			for (int i:indicesToCheck) {
-
-				for (int j:indicesToCheck) {
-					if (j<=i) continue;
-
-					if (matrix[i][j]<=min) {
-						min = matrix[i][j];
-						closestPair = new LinkedPair(i,j,min);
-					}
-
-				}
-			}
-		}
-
-		return closestPair;
+		singleLinkageClustererProduct.getIndicesToCheck().remove(new Integer(dendrogram[m-1].getFirst()));
 	}
 
 	/**
@@ -256,58 +164,9 @@ public class SingleLinkageClusterer {
 
 		for (int i=0;i<numItems-1;i++) {
 
-			if (isWithinCutoff(i, cutoff)) {
+			if (singleLinkageClustererProduct.isWithinCutoff(this, i, cutoff)) {
 
-				//int containingClusterId = getContainingCluster(clusters, dendrogram[i]);
-
-				int firstClusterId = -1;
-				int secondClusterId = -1;
-				for (int cId:clusters.keySet()) {
-					Set<Integer> members = clusters.get(cId);
-
-					if (members.contains(dendrogram[i].getFirst())) {
-						firstClusterId = cId;
-					}
-					if (members.contains(dendrogram[i].getSecond())) {
-						secondClusterId = cId;
-					}
-				}
-
-
-				if (firstClusterId==-1 && secondClusterId==-1) {
-					// neither member is in a cluster yet, let's assign a new cluster and put them both in
-					Set<Integer> members = new TreeSet<Integer>();
-					members.add(dendrogram[i].getFirst());
-					members.add(dendrogram[i].getSecond());
-					clusters.put(clusterId, members);
-					clusterId++;
-				} else if (firstClusterId!=-1 && secondClusterId==-1) {
-					// first member was in firstClusterId already, we add second
-					clusters.get(firstClusterId).add(dendrogram[i].getSecond());
-				} else if (secondClusterId!=-1 && firstClusterId==-1) {
-					// second member was in secondClusterId already, we add first
-					clusters.get(secondClusterId).add(dendrogram[i].getFirst());
-				} else {
-					// both were in different clusters already
-					// we need to join them: necessarily one must be of size 1 and the other of size>=1
-					Set<Integer> firstCluster = clusters.get(firstClusterId);
-					Set<Integer> secondCluster = clusters.get(secondClusterId);
-					if (firstCluster.size()<secondCluster.size()) {
-						logger.debug("Joining cluster "+firstClusterId+" to cluster "+secondClusterId);
-						// we join first onto second
-						for (int member : firstCluster) {
-							secondCluster.add(member);
-						}
-						clusters.remove(firstClusterId);
-					} else {
-						logger.debug("Joining cluster "+secondClusterId+" to cluster "+firstClusterId);
-						// we join second onto first
-						for (int member : secondCluster) {
-							firstCluster.add(member);
-						}
-						clusters.remove(secondClusterId);
-					}
-				}
+				clusterId = checkClusters(clusters, clusterId, i);
 
 				logger.debug("Within cutoff:     "+dendrogram[i]);
 
@@ -327,14 +186,20 @@ public class SingleLinkageClusterer {
 		}
 
 		// anything not clustered is assigned to a singleton cluster (cluster with one member)
+		checkIsClustered(finalClusters, newClusterId);
+
+		logger.debug("Clusters: \n"+singleLinkageClustererProduct.clustersToString(finalClusters));
+
+		return finalClusters;
+	}
+
+	/**
+	 * @param finalClusters
+	 * @param newClusterId
+	 */
+	private void checkIsClustered(Map<Integer, Set<Integer>> finalClusters, int newClusterId) {
 		for (int i=0;i<numItems;i++) {
-			boolean isAlreadyClustered = false;
-			for (Set<Integer> cluster:finalClusters.values()) {
-				if (cluster.contains(i)) {
-					isAlreadyClustered = true;
-					break;
-				}
-			}
+			boolean isAlreadyClustered = isAlreadyClustered(finalClusters, i);
 			if (!isAlreadyClustered) {
 				Set<Integer> members = new TreeSet<Integer>();
 				members.add(i);
@@ -343,60 +208,96 @@ public class SingleLinkageClusterer {
 			}
 
 		}
-
-		logger.debug("Clusters: \n"+clustersToString(finalClusters));
-
-		return finalClusters;
 	}
 
-	private boolean isWithinCutoff(int i, double cutoff) {
-		if (isScoreMatrix) {
-			if (dendrogram[i].getClosestDistance()>cutoff) {
-				return true;
-			} else {
-				return false;
-			}
+	/**
+	 * @param clusters
+	 * @param clusterId
+	 * @param i
+	 * @return
+	 */
+	private int checkClusters(Map<Integer, Set<Integer>> clusters, int clusterId, int i) {
+		//int containingClusterId = getContainingCluster(clusters, dendrogram[i]);
+
+		int firstClusterId = firstClusterId(clusters, i);
+		int secondClusterId = secondClusterId(clusters, i);
+		if (firstClusterId==-1 && secondClusterId==-1) {
+			// neither member is in a cluster yet, let's assign a new cluster and put them both in
+			Set<Integer> members = new TreeSet<Integer>();
+			members.add(dendrogram[i].getFirst());
+			members.add(dendrogram[i].getSecond());
+			clusters.put(clusterId, members);
+			clusterId++;
+		} else if (firstClusterId!=-1 && secondClusterId==-1) {
+			// first member was in firstClusterId already, we add second
+			clusters.get(firstClusterId).add(dendrogram[i].getSecond());
+		} else if (secondClusterId!=-1 && firstClusterId==-1) {
+			// second member was in secondClusterId already, we add first
+			clusters.get(secondClusterId).add(dendrogram[i].getFirst());
 		} else {
-			if (dendrogram[i].getClosestDistance()<cutoff) {
-				return true;
-			} else {
-				return false;
+			clusterSizeComparer(clusters, firstClusterId, secondClusterId);
+		}
+		return clusterId;
+	}
+
+	private int firstClusterId(Map<Integer, Set<Integer>> clusters, int i) {
+		int firstClusterId = -1;
+		for (int cId : clusters.keySet()) {
+			Set<Integer> members = clusters.get(cId);
+			if (members.contains(dendrogram[i].getFirst())) {
+				firstClusterId = cId;
 			}
+		}
+		return firstClusterId;
+	}
+
+	/**
+	 * @param clusters
+	 * @param firstClusterId
+	 * @param secondClusterId
+	 */
+	private void clusterSizeComparer(Map<Integer, Set<Integer>> clusters, int firstClusterId, int secondClusterId) {
+		// both were in different clusters already
+		// we need to join them: necessarily one must be of size 1 and the other of size>=1
+		Set<Integer> firstCluster = clusters.get(firstClusterId);
+		Set<Integer> secondCluster = clusters.get(secondClusterId);
+		if (firstCluster.size()<secondCluster.size()) {
+			logger.debug("Joining cluster "+firstClusterId+" to cluster "+secondClusterId);
+			// we join first onto second
+			for (int member : firstCluster) {
+				secondCluster.add(member);
+			}
+			clusters.remove(firstClusterId);
+		} else {
+			logger.debug("Joining cluster "+secondClusterId+" to cluster "+firstClusterId);
+			// we join second onto first
+			for (int member : secondCluster) {
+				firstCluster.add(member);
+			}
+			clusters.remove(secondClusterId);
 		}
 	}
 
-	private String clustersToString(Map<Integer,Set<Integer>> finalClusters) {
-		StringBuilder sb = new StringBuilder();
-		for (int cId:finalClusters.keySet()) {
-			sb.append(cId).append(": ");
-			for (int member:finalClusters.get(cId)) {
-				sb.append(member).append(" ");
+	private int secondClusterId(Map<Integer, Set<Integer>> clusters, int i) {
+		int secondClusterId = -1;
+		for (int cId : clusters.keySet()) {
+			Set<Integer> members = clusters.get(cId);
+			if (members.contains(dendrogram[i].getSecond())) {
+				secondClusterId = cId;
 			}
-			sb.append("\n");
 		}
-		return sb.toString();
+		return secondClusterId;
 	}
 
-	private String matrixToString() {
-		StringBuilder sb = new StringBuilder();
-		for (int i=0;i<numItems;i++) {
-			for (int j=0;j<numItems;j++) {
-				if (i==j) {
-					sb.append(String.format("%6s ","x"));
-				}
-				else if (i<j) {
-					if (matrix[i][j]==Double.MAX_VALUE) sb.append(String.format("%6s ","inf"));
-					else sb.append(String.format(Locale.US, "%6.2f ",matrix[i][j]));
-				}
-				else {
-					if (matrix[j][i]==Double.MAX_VALUE) sb.append(String.format("%6s ","inf"));
-					else sb.append(String.format(Locale.US, "%6.2f ",matrix[j][i]));
-				}
+	private boolean isAlreadyClustered(Map<Integer, Set<Integer>> finalClusters, int i) {
+		boolean isAlreadyClustered = false;
+		for (Set<Integer> cluster : finalClusters.values()) {
+			if (cluster.contains(i)) {
+				isAlreadyClustered = true;
+				break;
 			}
-			sb.append("\n");
 		}
-		sb.append("\n");
-		return sb.toString();
+		return isAlreadyClustered;
 	}
 
 }
