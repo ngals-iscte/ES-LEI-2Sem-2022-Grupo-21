@@ -155,22 +155,27 @@ public class TranscriptSequence extends DNASequence {
 	public ArrayList<ProteinSequence> getProteinCDSSequences() {
 		ArrayList<ProteinSequence> proteinSequenceList = new ArrayList<ProteinSequence>();
 		for (int i = 0; i < cdsSequenceList.size(); i++) {
-			String codingSequence = codingSequence(i);
+			ProteinSequence proteinSequence = proteinSequence(i);
 			CDSSequence cdsSequence = cdsSequenceList.get(i);
-			DNASequence dnaCodingSequence = null;
-			try {
-				dnaCodingSequence = new DNASequence(codingSequence.toUpperCase());
-			} catch (CompoundNotFoundException e) {
-				// if I understand this should not happen, please correct if I'm wrong - JD 2014-10-24
-				logger.error("Could not create DNA coding sequence, {}. This is most likely a bug.", e.getMessage());
-			}
-			RNASequence rnaCodingSequence = dnaCodingSequence.getRNASequence(TranscriptionEngine.getDefault());
-			ProteinSequence proteinSequence = rnaCodingSequence.getProteinSequence(TranscriptionEngine.getDefault());
-			proteinSequence.setAccession(new AccessionID(cdsSequence.getAccession().getID()));
 			proteinSequence.setParentDNASequence(cdsSequence, 1, cdsSequence.getLength());
 			proteinSequenceList.add(proteinSequence);
 		}
 		return proteinSequenceList;
+	}
+
+	private ProteinSequence proteinSequence(int i) {
+		String codingSequence = codingSequence(i);
+		CDSSequence cdsSequence = cdsSequenceList.get(i);
+		DNASequence dnaCodingSequence = null;
+		try {
+			dnaCodingSequence = new DNASequence(codingSequence.toUpperCase());
+		} catch (CompoundNotFoundException e) {
+			logger.error("Could not create DNA coding sequence, {}. This is most likely a bug.", e.getMessage());
+		}
+		RNASequence rnaCodingSequence = dnaCodingSequence.getRNASequence(TranscriptionEngine.getDefault());
+		ProteinSequence proteinSequence = rnaCodingSequence.getProteinSequence(TranscriptionEngine.getDefault());
+		proteinSequence.setAccession(new AccessionID(cdsSequence.getAccession().getID()));
+		return proteinSequence;
 	}
 
 	private String codingSequence(int i) {
