@@ -239,22 +239,26 @@ public class MultipleSequenceAlignment<S extends Sequence<C>, C extends Compound
 				}
 			}
 		} else {
-			for (S as : sequences) {
-				if (idFormat != null) {
-					s.append(String.format(idFormat, as.getAccession()));
-				}
-				for (int i = 0; i < getLength(); i += width) {
-					int start = i + 1, end = Math.min(getLength(), i + width);
-					s.append(as.getSubSequence(start, end).getSequenceAsString());
-					s.append(String.format("%n"));
-				}
-			}
+			append(width, idFormat, s);
 		}
 
 		if (webDisplay && aligConservation && sequences.size() == 2) {
 			s.append(IOUtils.getPDBLegend());
 		}
 		return s.toString();
+	}
+
+	private void append(int width, String idFormat, StringBuilder s) {
+		for (S as : sequences) {
+			if (idFormat != null) {
+				s.append(String.format(idFormat, as.getAccession()));
+			}
+			for (int i = 0; i < getLength(); i += width) {
+				int start = i + 1, end = Math.min(getLength(), i + width);
+				s.append(as.getSubSequence(start, end).getSequenceAsString());
+				s.append(String.format("%n"));
+			}
+		}
 	}
 
 	/**
