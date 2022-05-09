@@ -277,6 +277,7 @@ public class SimpleAlignedSequence<S extends Sequence<C>, C extends Compound> im
 		}
 		return count;
 	}
+	
 
 	@Override
 	public AccessionID getAccession() {
@@ -401,15 +402,33 @@ public class SimpleAlignedSequence<S extends Sequence<C>, C extends Compound> im
 				inGap = true;
 				sublocations.add(new SimpleLocation(start, step, Strand.UNDEFINED));
 			}
-			if (prev != null && !isGapStep) {
-				pStep++;
-			}
+			pStep = pStep(pStep, isGapStep);
 		}
+		addSublocation(sublocations, start, step, inGap);
+		combineSublocations(sublocations);
+		checkAlignment(step, oStep, oMax, pStep, pMax);
+	}
+
+	private void checkAlignment(int step, int oStep, int oMax, int pStep, int pMax) {
+		if (step != length || oStep != oMax || pStep != pMax) {
+			throw new IllegalArgumentException("Given sequence does not fit in alignment.");
+		}
+	}
+
+	private void addSublocation(List<Location> sublocations, int start, int step, boolean inGap) {
 		if (!inGap) {
 			sublocations.add(new SimpleLocation(start, step, Strand.UNDEFINED));
 		}
+	}
 
-		// combine sublocations into 1 Location
+	private int pStep(int pStep, boolean isGapStep) {
+		if (prev != null && !isGapStep) {
+			pStep++;
+		}
+		return pStep;
+	}
+
+	private void combineSublocations(List<Location> sublocations) {
 		if (sublocations.size() == 0) {
 			location = null;
 		} else if (sublocations.size() == 1) {
@@ -418,12 +437,6 @@ public class SimpleAlignedSequence<S extends Sequence<C>, C extends Compound> im
 			location = new SimpleLocation(sublocations.get(0).getStart(), sublocations.get(sublocations.size() - 1).getEnd(),
 					Strand.UNDEFINED,
 					false, sublocations);
-		}
-		// TODO handle circular alignments
-
-		// check that alignment has correct number of compounds in it to fit original sequence
-		if (step != length || oStep != oMax || pStep != pMax) {
-			throw new IllegalArgumentException("Given sequence does not fit in alignment.");
 		}
 	}
 
