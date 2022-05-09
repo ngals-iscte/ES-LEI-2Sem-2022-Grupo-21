@@ -205,56 +205,70 @@ public class MultipleSequenceAlignment<S extends Sequence<C>, C extends Compound
 		if (interlaced) {
 			String aligIndFormat = "%-" + Math.max(1, width / 2) + "d %" + Math.max(1, width - (width / 2) - 1) +
 					"d%n";
-			for (int i = 0; i < getLength(); i += width) {
-				int start = i + 1, end = Math.min(getLength(), i + width);
-				if (i > 0) {
-					s.append(String.format("%n"));
-				}
-				if (aligIndices) {
-					if (end < i + width) {
-						int line = end - start + 1;
-						aligIndFormat = "%-" + Math.max(1, line / 2) + "d %" + Math.max(1, line - (line / 2) - 1) +
-								"d%n";
-					}
-					if (idFormat != null) {
-						s.append(String.format(idFormat, ""));
-					}
-					s.append(String.format(aligIndFormat, start, end));
-				}
-				int counter = 0;
-				for (S as : sequences) {
-					counter++;
-					if (webDisplay && sequences.size() == 2) {
-						printSequenceAlignmentWeb(s, counter, idFormat, start, end);
-					} else {
-						if (idFormat != null) {
-							s.append(String.format(idFormat, as.getAccession()));
-						}
-						s.append(as.getSubSequence(start, end).getSequenceAsString());
-						s.append(String.format("%n"));
-					}
-					if (aligConservation && sequences.size() == 2 && counter == 1) {
-						printConservation(s, idFormat, start, end, webDisplay);
-					}
-				}
-			}
+			handleCircularAlignmentsAUX(width, idFormat, aligIndices, aligConservation, webDisplay, s, aligIndFormat);
 		} else {
-			for (S as : sequences) {
-				if (idFormat != null) {
-					s.append(String.format(idFormat, as.getAccession()));
-				}
-				for (int i = 0; i < getLength(); i += width) {
-					int start = i + 1, end = Math.min(getLength(), i + width);
-					s.append(as.getSubSequence(start, end).getSequenceAsString());
-					s.append(String.format("%n"));
-				}
-			}
+			append(width, idFormat, s);
 		}
 
 		if (webDisplay && aligConservation && sequences.size() == 2) {
 			s.append(IOUtils.getPDBLegend());
 		}
 		return s.toString();
+	}
+
+	private void handleCircularAlignmentsAUX(int width, String idFormat, boolean aligIndices, boolean aligConservation,
+			boolean webDisplay, StringBuilder s, String aligIndFormat) {
+		for (int i = 0; i < getLength(); i += width) {
+			int start = i + 1, end = Math.min(getLength(), i + width);
+			if (i > 0) {
+				s.append(String.format("%n"));
+			}
+			if (aligIndices) {
+				if (end < i + width) {
+					int line = end - start + 1;
+					aligIndFormat = "%-" + Math.max(1, line / 2) + "d %" + Math.max(1, line - (line / 2) - 1) +
+							"d%n";
+				}
+				if (idFormat != null) {
+					s.append(String.format(idFormat, ""));
+				}
+				s.append(String.format(aligIndFormat, start, end));
+			}
+			checkSequences(idFormat, aligConservation, webDisplay, s, start, end);
+		}
+	}
+
+	private void checkSequences(String idFormat, boolean aligConservation, boolean webDisplay, StringBuilder s,
+			int start, int end) {
+		int counter = 0;
+		for (S as : sequences) {
+			counter++;
+			if (webDisplay && sequences.size() == 2) {
+				printSequenceAlignmentWeb(s, counter, idFormat, start, end);
+			} else {
+				if (idFormat != null) {
+					s.append(String.format(idFormat, as.getAccession()));
+				}
+				s.append(as.getSubSequence(start, end).getSequenceAsString());
+				s.append(String.format("%n"));
+			}
+			if (aligConservation && sequences.size() == 2 && counter == 1) {
+				printConservation(s, idFormat, start, end, webDisplay);
+			}
+		}
+	}
+
+	private void append(int width, String idFormat, StringBuilder s) {
+		for (S as : sequences) {
+			if (idFormat != null) {
+				s.append(String.format(idFormat, as.getAccession()));
+			}
+			for (int i = 0; i < getLength(); i += width) {
+				int start = i + 1, end = Math.min(getLength(), i + width);
+				s.append(as.getSubSequence(start, end).getSequenceAsString());
+				s.append(String.format("%n"));
+			}
+		}
 	}
 
 	/**
