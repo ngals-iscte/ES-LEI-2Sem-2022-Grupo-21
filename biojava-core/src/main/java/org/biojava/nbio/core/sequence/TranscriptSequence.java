@@ -159,41 +159,10 @@ public class TranscriptSequence extends DNASequence {
 			String codingSequence = cdsSequence.getCodingSequence();
 			//          logger.debug("CDS {} {} = {}", getStrand(), cdsSequence.getPhase(), codingSequence);
 			if (this.getStrand() == Strand.NEGATIVE) {
-				if (cdsSequence.phase == 1) {
-					codingSequence = codingSequence.substring(1, codingSequence.length());
-				} else if (cdsSequence.phase == 2) {
-					codingSequence = codingSequence.substring(2, codingSequence.length());
-				}
-				if (i < cdsSequenceList.size() - 1) {
-					CDSSequence nextCDSSequence = cdsSequenceList.get(i + 1);
-					if (nextCDSSequence.phase == 1) {
-						String nextCodingSequence = nextCDSSequence.getCodingSequence();
-						codingSequence = codingSequence + nextCodingSequence.substring(0, 1);
-					} else if (nextCDSSequence.phase == 2) {
-						String nextCodingSequence = nextCDSSequence.getCodingSequence();
-						codingSequence = codingSequence + nextCodingSequence.substring(0, 2);
-					}
-				}
+				codingSequence = checkCodingSequence(i, cdsSequence, codingSequence);
 			} else {
-				if (cdsSequence.phase == 1) {
-					codingSequence = codingSequence.substring(1, codingSequence.length());
-				} else if (cdsSequence.phase == 2) {
-					codingSequence = codingSequence.substring(2, codingSequence.length());
-				}
-				if (i < cdsSequenceList.size() - 1) {
-					CDSSequence nextCDSSequence = cdsSequenceList.get(i + 1);
-					if (nextCDSSequence.phase == 1) {
-						String nextCodingSequence = nextCDSSequence.getCodingSequence();
-						codingSequence = codingSequence + nextCodingSequence.substring(0, 1);
-					} else if (nextCDSSequence.phase == 2) {
-						String nextCodingSequence = nextCDSSequence.getCodingSequence();
-						codingSequence = codingSequence + nextCodingSequence.substring(0, 2);
-					}
-				}
+				codingSequence = checkCodingSequence(i, cdsSequence, codingSequence);
 			}
-
-
-			//    logger.debug("Coding Sequence: {}", codingSequence);
 
 			DNASequence dnaCodingSequence = null;
 			try {
@@ -209,6 +178,25 @@ public class TranscriptSequence extends DNASequence {
 			proteinSequenceList.add(proteinSequence);
 		}
 		return proteinSequenceList;
+	}
+
+	private String checkCodingSequence(int i, CDSSequence cdsSequence, String codingSequence) {
+		if (cdsSequence.phase == 1) {
+			codingSequence = codingSequence.substring(1, codingSequence.length());
+		} else if (cdsSequence.phase == 2) {
+			codingSequence = codingSequence.substring(2, codingSequence.length());
+		}
+		if (i < cdsSequenceList.size() - 1) {
+			CDSSequence nextCDSSequence = cdsSequenceList.get(i + 1);
+			if (nextCDSSequence.phase == 1) {
+				String nextCodingSequence = nextCDSSequence.getCodingSequence();
+				codingSequence = codingSequence + nextCodingSequence.substring(0, 1);
+			} else if (nextCDSSequence.phase == 2) {
+				String nextCodingSequence = nextCDSSequence.getCodingSequence();
+				codingSequence = codingSequence + nextCodingSequence.substring(0, 2);
+			}
+		}
+		return codingSequence;
 	}
 
 	/**
