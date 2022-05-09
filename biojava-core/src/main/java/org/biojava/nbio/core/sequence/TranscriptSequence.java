@@ -155,29 +155,43 @@ public class TranscriptSequence extends DNASequence {
 	public ArrayList<ProteinSequence> getProteinCDSSequences() {
 		ArrayList<ProteinSequence> proteinSequenceList = new ArrayList<ProteinSequence>();
 		for (int i = 0; i < cdsSequenceList.size(); i++) {
+			ProteinSequence proteinSequence = proteinSequence(i);
 			CDSSequence cdsSequence = cdsSequenceList.get(i);
-			String codingSequence = cdsSequence.getCodingSequence();
-			//          logger.debug("CDS {} {} = {}", getStrand(), cdsSequence.getPhase(), codingSequence);
-			if (this.getStrand() == Strand.NEGATIVE) {
-				codingSequence = checkCodingSequence(i, cdsSequence, codingSequence);
-			} else {
-				codingSequence = checkCodingSequence(i, cdsSequence, codingSequence);
-			}
-
-			DNASequence dnaCodingSequence = null;
-			try {
-				dnaCodingSequence = new DNASequence(codingSequence.toUpperCase());
-			} catch (CompoundNotFoundException e) {
-				// if I understand this should not happen, please correct if I'm wrong - JD 2014-10-24
-				logger.error("Could not create DNA coding sequence, {}. This is most likely a bug.", e.getMessage());
-			}
-			RNASequence rnaCodingSequence = dnaCodingSequence.getRNASequence(TranscriptionEngine.getDefault());
-			ProteinSequence proteinSequence = rnaCodingSequence.getProteinSequence(TranscriptionEngine.getDefault());
-			proteinSequence.setAccession(new AccessionID(cdsSequence.getAccession().getID()));
 			proteinSequence.setParentDNASequence(cdsSequence, 1, cdsSequence.getLength());
 			proteinSequenceList.add(proteinSequence);
 		}
 		return proteinSequenceList;
+	}
+
+	private ProteinSequence proteinSequence(int i) {
+		DNASequence dnaCodingSequence = dnaCodingSequence(i);
+		CDSSequence cdsSequence = cdsSequenceList.get(i);
+		RNASequence rnaCodingSequence = dnaCodingSequence.getRNASequence(TranscriptionEngine.getDefault());
+		ProteinSequence proteinSequence = rnaCodingSequence.getProteinSequence(TranscriptionEngine.getDefault());
+		proteinSequence.setAccession(new AccessionID(cdsSequence.getAccession().getID()));
+		return proteinSequence;
+	}
+
+	private DNASequence dnaCodingSequence(int i) {
+		String codingSequence = codingSequence(i);
+		DNASequence dnaCodingSequence = null;
+		try {
+			dnaCodingSequence = new DNASequence(codingSequence.toUpperCase());
+		} catch (CompoundNotFoundException e) {
+			logger.error("Could not create DNA coding sequence, {}. This is most likely a bug.", e.getMessage());
+		}
+		return dnaCodingSequence;
+	}
+
+	private String codingSequence(int i) {
+		CDSSequence cdsSequence = cdsSequenceList.get(i);
+		String codingSequence = cdsSequence.getCodingSequence();
+		if (this.getStrand() == Strand.NEGATIVE) {
+			codingSequence = checkCodingSequence(i, cdsSequence, codingSequence);
+		} else {
+			codingSequence = checkCodingSequence(i, cdsSequence, codingSequence);
+		}
+		return codingSequence;
 	}
 
 	private String checkCodingSequence(int i, CDSSequence cdsSequence, String codingSequence) {
