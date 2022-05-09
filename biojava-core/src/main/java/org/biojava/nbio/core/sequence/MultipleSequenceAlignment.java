@@ -221,22 +221,7 @@ public class MultipleSequenceAlignment<S extends Sequence<C>, C extends Compound
 					}
 					s.append(String.format(aligIndFormat, start, end));
 				}
-				int counter = 0;
-				for (S as : sequences) {
-					counter++;
-					if (webDisplay && sequences.size() == 2) {
-						printSequenceAlignmentWeb(s, counter, idFormat, start, end);
-					} else {
-						if (idFormat != null) {
-							s.append(String.format(idFormat, as.getAccession()));
-						}
-						s.append(as.getSubSequence(start, end).getSequenceAsString());
-						s.append(String.format("%n"));
-					}
-					if (aligConservation && sequences.size() == 2 && counter == 1) {
-						printConservation(s, idFormat, start, end, webDisplay);
-					}
-				}
+				checkSequences(idFormat, aligConservation, webDisplay, s, start, end);
 			}
 		} else {
 			append(width, idFormat, s);
@@ -246,6 +231,26 @@ public class MultipleSequenceAlignment<S extends Sequence<C>, C extends Compound
 			s.append(IOUtils.getPDBLegend());
 		}
 		return s.toString();
+	}
+
+	private void checkSequences(String idFormat, boolean aligConservation, boolean webDisplay, StringBuilder s,
+			int start, int end) {
+		int counter = 0;
+		for (S as : sequences) {
+			counter++;
+			if (webDisplay && sequences.size() == 2) {
+				printSequenceAlignmentWeb(s, counter, idFormat, start, end);
+			} else {
+				if (idFormat != null) {
+					s.append(String.format(idFormat, as.getAccession()));
+				}
+				s.append(as.getSubSequence(start, end).getSequenceAsString());
+				s.append(String.format("%n"));
+			}
+			if (aligConservation && sequences.size() == 2 && counter == 1) {
+				printConservation(s, idFormat, start, end, webDisplay);
+			}
+		}
 	}
 
 	private void append(int width, String idFormat, StringBuilder s) {
