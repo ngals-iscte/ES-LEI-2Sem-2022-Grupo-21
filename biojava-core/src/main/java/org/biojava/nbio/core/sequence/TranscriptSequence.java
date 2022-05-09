@@ -164,18 +164,23 @@ public class TranscriptSequence extends DNASequence {
 	}
 
 	private ProteinSequence proteinSequence(int i) {
-		String codingSequence = codingSequence(i);
+		DNASequence dnaCodingSequence = dnaCodingSequence(i);
 		CDSSequence cdsSequence = cdsSequenceList.get(i);
+		RNASequence rnaCodingSequence = dnaCodingSequence.getRNASequence(TranscriptionEngine.getDefault());
+		ProteinSequence proteinSequence = rnaCodingSequence.getProteinSequence(TranscriptionEngine.getDefault());
+		proteinSequence.setAccession(new AccessionID(cdsSequence.getAccession().getID()));
+		return proteinSequence;
+	}
+
+	private DNASequence dnaCodingSequence(int i) {
+		String codingSequence = codingSequence(i);
 		DNASequence dnaCodingSequence = null;
 		try {
 			dnaCodingSequence = new DNASequence(codingSequence.toUpperCase());
 		} catch (CompoundNotFoundException e) {
 			logger.error("Could not create DNA coding sequence, {}. This is most likely a bug.", e.getMessage());
 		}
-		RNASequence rnaCodingSequence = dnaCodingSequence.getRNASequence(TranscriptionEngine.getDefault());
-		ProteinSequence proteinSequence = rnaCodingSequence.getProteinSequence(TranscriptionEngine.getDefault());
-		proteinSequence.setAccession(new AccessionID(cdsSequence.getAccession().getID()));
-		return proteinSequence;
+		return dnaCodingSequence;
 	}
 
 	private String codingSequence(int i) {
