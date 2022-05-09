@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Map;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathException;
+import javax.xml.xpath.XPathExpressionException;
+
 import org.biojava.nbio.core.sequence.template.Sequence;
 import org.biojava.nbio.core.util.XMLHelper;
 import org.slf4j.LoggerFactory;
@@ -154,25 +156,7 @@ public class BlastXMLParser implements ResultFactory {
 
 						// add the new hsp only if it pass the specified threshold. It can save lot of memory and some parsing time
 						if (evalue <= maxEScore) {
-							BlastHspBuilder blastHspBuilder = new BlastHspBuilder();
-							blastHspBuilder
-								.setHspNum(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_num").getTextContent()))
-								.setHspBitScore(new Double(XMLHelper.selectSingleElement(hspElement, "Hsp_bit-score").getTextContent()))
-								.setHspScore(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_score").getTextContent()))
-								.setHspEvalue(evalue)
-								.setHspQueryFrom(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_query-from").getTextContent()))
-								.setHspQueryTo(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_query-to").getTextContent()))
-								.setHspHitFrom(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_hit-from").getTextContent()))
-								.setHspHitTo(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_hit-to").getTextContent()))
-								.setHspQueryFrame(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_query-frame").getTextContent()))
-								.setHspHitFrame(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_hit-frame").getTextContent()))
-								.setHspIdentity(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_identity").getTextContent()))
-								.setHspPositive(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_positive").getTextContent()))
-								.setHspGaps(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_gaps").getTextContent()))
-								.setHspAlignLen(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_align-len").getTextContent()))
-								.setHspQseq(XMLHelper.selectSingleElement(hspElement, "Hsp_qseq").getTextContent())
-								.setHspHseq(XMLHelper.selectSingleElement(hspElement, "Hsp_hseq").getTextContent())
-								.setHspIdentityString(XMLHelper.selectSingleElement(hspElement, "Hsp_midline").getTextContent());
+							BlastHspBuilder blastHspBuilder = setBlastHspBuilder(hspElement, evalue);
 
 							hspsCollection.add(blastHspBuilder.createBlastHsp());
 						}
@@ -191,6 +175,28 @@ public class BlastXMLParser implements ResultFactory {
 		logger.info("Parsing of "+targetFile+" finished.");
 
 		return resultsCollection;
+	}
+	private BlastHspBuilder setBlastHspBuilder(Element hspElement, Double evalue) throws XPathExpressionException {
+		BlastHspBuilder blastHspBuilder = new BlastHspBuilder();
+		blastHspBuilder
+			.setHspNum(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_num").getTextContent()))
+			.setHspBitScore(new Double(XMLHelper.selectSingleElement(hspElement, "Hsp_bit-score").getTextContent()))
+			.setHspScore(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_score").getTextContent()))
+			.setHspEvalue(evalue)
+			.setHspQueryFrom(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_query-from").getTextContent()))
+			.setHspQueryTo(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_query-to").getTextContent()))
+			.setHspHitFrom(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_hit-from").getTextContent()))
+			.setHspHitTo(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_hit-to").getTextContent()))
+			.setHspQueryFrame(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_query-frame").getTextContent()))
+			.setHspHitFrame(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_hit-frame").getTextContent()))
+			.setHspIdentity(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_identity").getTextContent()))
+			.setHspPositive(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_positive").getTextContent()))
+			.setHspGaps(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_gaps").getTextContent()))
+			.setHspAlignLen(new Integer(XMLHelper.selectSingleElement(hspElement, "Hsp_align-len").getTextContent()))
+			.setHspQseq(XMLHelper.selectSingleElement(hspElement, "Hsp_qseq").getTextContent())
+			.setHspHseq(XMLHelper.selectSingleElement(hspElement, "Hsp_hseq").getTextContent())
+			.setHspIdentityString(XMLHelper.selectSingleElement(hspElement, "Hsp_midline").getTextContent());
+		return blastHspBuilder;
 	}
 
 	@Override
