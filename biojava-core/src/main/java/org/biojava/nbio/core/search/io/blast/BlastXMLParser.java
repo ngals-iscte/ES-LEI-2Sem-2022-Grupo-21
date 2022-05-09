@@ -128,30 +128,7 @@ public class BlastXMLParser implements ResultFactory {
 						XMLHelper.selectSingleElement(element,"Iteration_query-ID").getTextContent()
 				));
 
-
-
-				Element iterationHitsElement = XMLHelper.selectSingleElement(element, "Iteration_hits");
-				ArrayList<Element> hitList = XMLHelper.selectElements(iterationHitsElement, "Hit");
-
-				hitsCollection = new ArrayList<Hit>();
-				for (Element hitElement : hitList) {
-					BlastHitBuilder blastHitBuilder = new BlastHitBuilder();
-					blastHitBuilder
-						.setHitNum(new Integer(XMLHelper.selectSingleElement(hitElement, "Hit_num").getTextContent()))
-						.setHitId(XMLHelper.selectSingleElement(hitElement, "Hit_id").getTextContent())
-						.setHitDef(XMLHelper.selectSingleElement(hitElement, "Hit_def").getTextContent())
-						.setHitAccession(XMLHelper.selectSingleElement(hitElement, "Hit_accession").getTextContent())
-						.setHitLen(new Integer(XMLHelper.selectSingleElement(hitElement, "Hit_len").getTextContent()));
-
-					if (databaseReferences != null) blastHitBuilder.setHitSequence(databaseReferencesMap.get(
-						XMLHelper.selectSingleElement(hitElement, "Hit_id").getTextContent()
-					));
-
-					hspsCollection = goThroughHspsCollection(maxEScore, hitElement);
-					// finally set the computed hsp collection and create Hit object
-					blastHitBuilder.setHsps(hspsCollection);
-					hitsCollection.add(blastHitBuilder.createBlastHit());
-				}
+				hitsCollection = createHitObject(maxEScore, element);
 				// finally set the computed Hit collection to the result
 				resultBuilder.setHits(hitsCollection);
 				resultsCollection.add(resultBuilder.createBlastResult());
@@ -162,6 +139,33 @@ public class BlastXMLParser implements ResultFactory {
 		logger.info("Parsing of "+targetFile+" finished.");
 
 		return resultsCollection;
+	}
+	private ArrayList<Hit> createHitObject(double maxEScore, Element element) throws XPathExpressionException {
+		ArrayList<Hit> hitsCollection;
+		ArrayList<Hsp> hspsCollection;
+		Element iterationHitsElement = XMLHelper.selectSingleElement(element, "Iteration_hits");
+		ArrayList<Element> hitList = XMLHelper.selectElements(iterationHitsElement, "Hit");
+
+		hitsCollection = new ArrayList<Hit>();
+		for (Element hitElement : hitList) {
+			BlastHitBuilder blastHitBuilder = new BlastHitBuilder();
+			blastHitBuilder
+				.setHitNum(new Integer(XMLHelper.selectSingleElement(hitElement, "Hit_num").getTextContent()))
+				.setHitId(XMLHelper.selectSingleElement(hitElement, "Hit_id").getTextContent())
+				.setHitDef(XMLHelper.selectSingleElement(hitElement, "Hit_def").getTextContent())
+				.setHitAccession(XMLHelper.selectSingleElement(hitElement, "Hit_accession").getTextContent())
+				.setHitLen(new Integer(XMLHelper.selectSingleElement(hitElement, "Hit_len").getTextContent()));
+
+			if (databaseReferences != null) blastHitBuilder.setHitSequence(databaseReferencesMap.get(
+				XMLHelper.selectSingleElement(hitElement, "Hit_id").getTextContent()
+			));
+
+			hspsCollection = goThroughHspsCollection(maxEScore, hitElement);
+			// finally set the computed hsp collection and create Hit object
+			blastHitBuilder.setHsps(hspsCollection);
+			hitsCollection.add(blastHitBuilder.createBlastHit());
+		}
+		return hitsCollection;
 	}
 	private ArrayList<Hsp> goThroughHspsCollection(double maxEScore, Element hitElement)
 			throws XPathExpressionException {
