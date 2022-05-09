@@ -118,13 +118,7 @@ public class BlastTabularParser implements ResultFactory {
 		int lineNumber=0;
 		while (lineNumber < fileLinesCount){
 			try {
-				BlastResultBuilder resultBuilder = new BlastResultBuilder();
-				resultBuilder
-						.setQueryID(queryId)
-						.setDbFile(databaseFile)
-						.setProgram(programName)
-						.setQueryDef(queryName)
-						.setReference(blastReference);
+				BlastResultBuilder resultBuilder = setBlastResultBuilder();
 
 				List<Hit> hits = new ArrayList<Hit>();
 
@@ -153,6 +147,17 @@ public class BlastTabularParser implements ResultFactory {
 			}
 		}
 		return results;
+	}
+
+	private BlastResultBuilder setBlastResultBuilder() {
+		BlastResultBuilder resultBuilder = new BlastResultBuilder();
+		resultBuilder
+				.setQueryID(queryId)
+				.setDbFile(databaseFile)
+				.setProgram(programName)
+				.setQueryDef(queryName)
+				.setReference(blastReference);
+		return resultBuilder;
 	}
 
 	private BlastHspBuilder setBlastHspBuilder(List<Hsp> hsps) {
