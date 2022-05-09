@@ -23,7 +23,7 @@
  */
 
 package org.biojava.nbio.core.alignment;
-//ola
+
 import org.biojava.nbio.core.alignment.template.AlignedSequence;
 import org.biojava.nbio.core.sequence.AccessionID;
 import org.biojava.nbio.core.sequence.Strand;
