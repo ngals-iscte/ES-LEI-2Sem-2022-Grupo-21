@@ -21,28 +21,25 @@
  */
 package org.biojava.nbio.core.sequence.io;
 
-import org.biojava.nbio.core.exceptions.CompoundNotFoundException;
+import java.util.ArrayList;
+
 import org.biojava.nbio.core.sequence.AccessionID;
 import org.biojava.nbio.core.sequence.DataSource;
-import org.biojava.nbio.core.sequence.ProteinSequence;
-import org.biojava.nbio.core.sequence.compound.AminoAcidCompound;
 import org.biojava.nbio.core.sequence.io.template.SequenceHeaderParserInterface;
 import org.biojava.nbio.core.sequence.template.AbstractSequence;
 import org.biojava.nbio.core.sequence.template.AbstractSequence.AnnotationType;
 import org.biojava.nbio.core.sequence.template.Compound;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
 
 /**
- * The default fasta header parser where some headers are well defined based on the source
- * database which allows us to set the source of the protein sequence and the identifier
- * that can be used in future implementations to load features from external sources
+ * The default fasta header parser where some headers are well defined based on
+ * the source database which allows us to set the source of the protein sequence
+ * and the identifier that can be used in future implementations to load
+ * features from external sources
  *
- * If the user has a custom header with local data then they can create their own implementation
- * of a FastaHeaderParserInterface
- *<pre>
+ * If the user has a custom header with local data then they can create their
+ * own implementation of a FastaHeaderParserInterface
+ * 
+ * <pre>
  * GenBank                           gi|gi-number|gb|accession|locus
  * ENA Data Library                  gi|gi-number|emb|accession|locus
  * DDBJ, DNA Database of Japan       gi|gi-number|dbj|accession|locus
@@ -57,15 +54,16 @@ import java.util.ArrayList;
  * General database identifier       gnl|database|identifier
  * NCBI Reference Sequence           ref|accession|locus
  * Local Sequence identifier         lcl|identifier
- *</pre>
+ * </pre>
+ * 
  * @author Scooter Willis <willishf at gmail dot com>
  */
-public class GenericFastaHeaderParser<S extends AbstractSequence<C>, C extends Compound> implements SequenceHeaderParserInterface<S,C> {
-
-	private final static Logger logger = LoggerFactory.getLogger(GenericFastaHeaderParser.class);
+public class GenericFastaHeaderParser<S extends AbstractSequence<C>, C extends Compound>
+		implements SequenceHeaderParserInterface<S, C> {
 
 	/**
 	 * Parse out the components where some have a | and others do not
+	 * 
 	 * @param header
 	 * @return
 	 */
@@ -73,19 +71,20 @@ public class GenericFastaHeaderParser<S extends AbstractSequence<C>, C extends C
 		String[] data = new String[0];
 		ArrayList<String> values = new ArrayList<String>();
 		StringBuffer sb = new StringBuffer();
-		//commented out 1/11/2012 to resolve an issue where headers do contain a length= at the end that are not recognized
-		//if(header.indexOf("length=") != -1){
-		//    data = new String[1];
-		//    int index = header.indexOf("length=");
-		//    data[0] = header.substring(0, index).trim();
-	//        logger.debug("accession=" + data[0]);
-		//    return data;
-		//} else
-		 if (!header.startsWith("PDB:")) {
+		// commented out 1/11/2012 to resolve an issue where headers do contain a
+		// length= at the end that are not recognized
+		// if(header.indexOf("length=") != -1){
+		// data = new String[1];
+		// int index = header.indexOf("length=");
+		// data[0] = header.substring(0, index).trim();
+		// logger.debug("accession=" + data[0]);
+		// return data;
+		// } else
+		if (!header.startsWith("PDB:")) {
 			for (int i = 0; i < header.length(); i++) {
 				if (header.charAt(i) == '|') {
 					values.add(sb.toString());
-					sb.setLength(0);//faster than  = new StringBuffer();
+					sb.setLength(0);// faster than = new StringBuffer();
 				} else if (i == header.length() - 1) {
 					sb.append(header.charAt(i));
 					values.add(sb.toString());
@@ -104,19 +103,21 @@ public class GenericFastaHeaderParser<S extends AbstractSequence<C>, C extends C
 
 	/**
 	 * Parse the header and set the values in the sequence
+	 * 
 	 * @param header
 	 * @param sequence
 	 */
 	@Override
 	public void parseHeader(String header, S sequence) {
-		//uniptrot
-		// tr|Q0TET7|Q0TET7_ECOL5 Putative uncharacterized protein OS=Escherichia coli O6:K15:H31 (strain 536 / UPEC) GN=ECP_2553 PE=4 SV=1
+		// uniptrot
+		// tr|Q0TET7|Q0TET7_ECOL5 Putative uncharacterized protein OS=Escherichia coli
+		// O6:K15:H31 (strain 536 / UPEC) GN=ECP_2553 PE=4 SV=1
 		sequence.setOriginalHeader(header);
 		String[] data = getHeaderValues(header);
 
 		if (data.length == 1) {
 			sequence.setAccession(new AccessionID(data[0]));
-		} else  if (data[0].equalsIgnoreCase("sp") || data[0].equalsIgnoreCase("tr")) {
+		} else if (data[0].equalsIgnoreCase("sp") || data[0].equalsIgnoreCase("tr")) {
 			if (data[0].equalsIgnoreCase("sp")) {
 				sequence.setAnnotationType(AnnotationType.CURATED);
 			} else {
@@ -129,15 +130,8 @@ public class GenericFastaHeaderParser<S extends AbstractSequence<C>, C extends C
 			}
 
 		} else if (data[0].equalsIgnoreCase("gi")) {
-			DataSource giSource = DataSource.UNKNOWN;
+			DataSource giSource = giSource(data);
 			if (data.length >= 3) {
-				if (data[2].equalsIgnoreCase("gb")) {
-					giSource = DataSource.GENBANK;
-				} else if (data[2].equalsIgnoreCase("emb")) {
-					giSource = DataSource.ENA;
-				} else if (data[2].equalsIgnoreCase("dbj")) {
-					giSource = DataSource.DDBJ;
-				}
 				sequence.setAccession(new AccessionID(data[3], giSource));
 			} else {
 				sequence.setAccession(new AccessionID(header, giSource));
@@ -165,11 +159,23 @@ public class GenericFastaHeaderParser<S extends AbstractSequence<C>, C extends C
 		} else if (data[0].equalsIgnoreCase("lcl")) {
 			sequence.setAccession(new AccessionID(data[1], DataSource.LOCAL));
 		} else {
-			sequence.setAccession(new AccessionID(data[0])); // avoid the common problem of picking up all the comments original header in getOriginalHeader
+			sequence.setAccession(new AccessionID(data[0])); // avoid the common problem of picking up all the comments
+																// original header in getOriginalHeader
 		}
-
-
 	}
 
-	
+	private DataSource giSource(String[] data) {
+		DataSource giSource = DataSource.UNKNOWN;
+		if (data.length >= 3) {
+			if (data[2].equalsIgnoreCase("gb")) {
+				giSource = DataSource.GENBANK;
+			} else if (data[2].equalsIgnoreCase("emb")) {
+				giSource = DataSource.ENA;
+			} else if (data[2].equalsIgnoreCase("dbj")) {
+				giSource = DataSource.DDBJ;
+			}
+		} else {
+		}
+		return giSource;
+	}
 }
