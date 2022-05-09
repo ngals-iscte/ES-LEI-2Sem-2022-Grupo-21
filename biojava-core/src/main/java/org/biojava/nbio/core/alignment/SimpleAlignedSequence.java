@@ -404,16 +404,20 @@ public class SimpleAlignedSequence<S extends Sequence<C>, C extends Compound> im
 			}
 			pStep = pStep(pStep, isGapStep);
 		}
-		if (!inGap) {
-			sublocations.add(new SimpleLocation(start, step, Strand.UNDEFINED));
-		}
-
-		// combine sublocations into 1 Location
+		addSublocation(sublocations, start, step, inGap);
 		combineSublocations(sublocations);
+		checkAlignment(step, oStep, oMax, pStep, pMax);
+	}
 
-		// check that alignment has correct number of compounds in it to fit original sequence
+	private void checkAlignment(int step, int oStep, int oMax, int pStep, int pMax) {
 		if (step != length || oStep != oMax || pStep != pMax) {
 			throw new IllegalArgumentException("Given sequence does not fit in alignment.");
+		}
+	}
+
+	private void addSublocation(List<Location> sublocations, int start, int step, boolean inGap) {
+		if (!inGap) {
+			sublocations.add(new SimpleLocation(start, step, Strand.UNDEFINED));
 		}
 	}
 
@@ -435,7 +439,7 @@ public class SimpleAlignedSequence<S extends Sequence<C>, C extends Compound> im
 					false, sublocations);
 		}
 	}
-	
+
 	@Override
 	//TODO Needs to implements
 	public SequenceView<C> getInverse() {
