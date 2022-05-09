@@ -205,24 +205,7 @@ public class MultipleSequenceAlignment<S extends Sequence<C>, C extends Compound
 		if (interlaced) {
 			String aligIndFormat = "%-" + Math.max(1, width / 2) + "d %" + Math.max(1, width - (width / 2) - 1) +
 					"d%n";
-			for (int i = 0; i < getLength(); i += width) {
-				int start = i + 1, end = Math.min(getLength(), i + width);
-				if (i > 0) {
-					s.append(String.format("%n"));
-				}
-				if (aligIndices) {
-					if (end < i + width) {
-						int line = end - start + 1;
-						aligIndFormat = "%-" + Math.max(1, line / 2) + "d %" + Math.max(1, line - (line / 2) - 1) +
-								"d%n";
-					}
-					if (idFormat != null) {
-						s.append(String.format(idFormat, ""));
-					}
-					s.append(String.format(aligIndFormat, start, end));
-				}
-				checkSequences(idFormat, aligConservation, webDisplay, s, start, end);
-			}
+			handleCircularAlignmentsAUX(width, idFormat, aligIndices, aligConservation, webDisplay, s, aligIndFormat);
 		} else {
 			append(width, idFormat, s);
 		}
@@ -231,6 +214,28 @@ public class MultipleSequenceAlignment<S extends Sequence<C>, C extends Compound
 			s.append(IOUtils.getPDBLegend());
 		}
 		return s.toString();
+	}
+
+	private void handleCircularAlignmentsAUX(int width, String idFormat, boolean aligIndices, boolean aligConservation,
+			boolean webDisplay, StringBuilder s, String aligIndFormat) {
+		for (int i = 0; i < getLength(); i += width) {
+			int start = i + 1, end = Math.min(getLength(), i + width);
+			if (i > 0) {
+				s.append(String.format("%n"));
+			}
+			if (aligIndices) {
+				if (end < i + width) {
+					int line = end - start + 1;
+					aligIndFormat = "%-" + Math.max(1, line / 2) + "d %" + Math.max(1, line - (line / 2) - 1) +
+							"d%n";
+				}
+				if (idFormat != null) {
+					s.append(String.format(idFormat, ""));
+				}
+				s.append(String.format(aligIndFormat, start, end));
+			}
+			checkSequences(idFormat, aligConservation, webDisplay, s, start, end);
+		}
 	}
 
 	private void checkSequences(String idFormat, boolean aligConservation, boolean webDisplay, StringBuilder s,
