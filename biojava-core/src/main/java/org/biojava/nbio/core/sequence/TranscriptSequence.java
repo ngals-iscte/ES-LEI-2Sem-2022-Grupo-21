@@ -155,15 +155,8 @@ public class TranscriptSequence extends DNASequence {
 	public ArrayList<ProteinSequence> getProteinCDSSequences() {
 		ArrayList<ProteinSequence> proteinSequenceList = new ArrayList<ProteinSequence>();
 		for (int i = 0; i < cdsSequenceList.size(); i++) {
+			String codingSequence = codingSequence(i);
 			CDSSequence cdsSequence = cdsSequenceList.get(i);
-			String codingSequence = cdsSequence.getCodingSequence();
-			//          logger.debug("CDS {} {} = {}", getStrand(), cdsSequence.getPhase(), codingSequence);
-			if (this.getStrand() == Strand.NEGATIVE) {
-				codingSequence = checkCodingSequence(i, cdsSequence, codingSequence);
-			} else {
-				codingSequence = checkCodingSequence(i, cdsSequence, codingSequence);
-			}
-
 			DNASequence dnaCodingSequence = null;
 			try {
 				dnaCodingSequence = new DNASequence(codingSequence.toUpperCase());
@@ -178,6 +171,17 @@ public class TranscriptSequence extends DNASequence {
 			proteinSequenceList.add(proteinSequence);
 		}
 		return proteinSequenceList;
+	}
+
+	private String codingSequence(int i) {
+		CDSSequence cdsSequence = cdsSequenceList.get(i);
+		String codingSequence = cdsSequence.getCodingSequence();
+		if (this.getStrand() == Strand.NEGATIVE) {
+			codingSequence = checkCodingSequence(i, cdsSequence, codingSequence);
+		} else {
+			codingSequence = checkCodingSequence(i, cdsSequence, codingSequence);
+		}
+		return codingSequence;
 	}
 
 	private String checkCodingSequence(int i, CDSSequence cdsSequence, String codingSequence) {
