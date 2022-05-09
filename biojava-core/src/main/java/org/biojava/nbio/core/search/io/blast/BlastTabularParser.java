@@ -118,13 +118,7 @@ public class BlastTabularParser implements ResultFactory {
 		int lineNumber=0;
 		while (lineNumber < fileLinesCount){
 			try {
-				BlastResultBuilder resultBuilder = new BlastResultBuilder();
-				resultBuilder
-						.setQueryID(queryId)
-						.setDbFile(databaseFile)
-						.setProgram(programName)
-						.setQueryDef(queryName)
-						.setReference(blastReference);
+				BlastResultBuilder resultBuilder = setBlastResultBuilder();
 
 				List<Hit> hits = new ArrayList<Hit>();
 
@@ -141,19 +135,7 @@ public class BlastTabularParser implements ResultFactory {
 							lineNumber++;
 							continue;
 						}
-						BlastHspBuilder hspBuilder = new BlastHspBuilder();
-						hspBuilder
-							.setHspAlignLen(new Integer(alnLength))
-							.setHspGaps(new Integer(gapOpenCount))
-							.setHspQueryFrom(new Integer(queryStart))
-							.setHspQueryTo(new Integer(queryEnd))
-							.setHspHitFrom(new Integer(subjectStart))
-							.setHspHitTo(new Integer(subjectEnd))
-							.setHspEvalue(new Double(evalue))
-							.setHspBitScore(new Double(bitScore))
-							.setPercentageIdentity(new Double(percIdentity)/100)
-							.setMismatchCount(new Integer(mismatchCount));
-						hsps.add(hspBuilder.createBlastHsp());
+						BlastHspBuilder hspBuilder = setBlastHspBuilder(hsps);
 						if (scanner.hasNext()) line = fetchData(scanner);
 						lineNumber++;
 					}
@@ -165,6 +147,34 @@ public class BlastTabularParser implements ResultFactory {
 			}
 		}
 		return results;
+	}
+
+	private BlastResultBuilder setBlastResultBuilder() {
+		BlastResultBuilder resultBuilder = new BlastResultBuilder();
+		resultBuilder
+				.setQueryID(queryId)
+				.setDbFile(databaseFile)
+				.setProgram(programName)
+				.setQueryDef(queryName)
+				.setReference(blastReference);
+		return resultBuilder;
+	}
+
+	private BlastHspBuilder setBlastHspBuilder(List<Hsp> hsps) {
+		BlastHspBuilder hspBuilder = new BlastHspBuilder();
+		hspBuilder
+			.setHspAlignLen(new Integer(alnLength))
+			.setHspGaps(new Integer(gapOpenCount))
+			.setHspQueryFrom(new Integer(queryStart))
+			.setHspQueryTo(new Integer(queryEnd))
+			.setHspHitFrom(new Integer(subjectStart))
+			.setHspHitTo(new Integer(subjectEnd))
+			.setHspEvalue(new Double(evalue))
+			.setHspBitScore(new Double(bitScore))
+			.setPercentageIdentity(new Double(percIdentity)/100)
+			.setMismatchCount(new Integer(mismatchCount));
+		hsps.add(hspBuilder.createBlastHsp());
+		return hspBuilder;
 	}
 
 	private String fetchData(Scanner scanner){
