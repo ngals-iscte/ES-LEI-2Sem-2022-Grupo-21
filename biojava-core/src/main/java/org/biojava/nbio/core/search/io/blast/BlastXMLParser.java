@@ -147,20 +147,7 @@ public class BlastXMLParser implements ResultFactory {
 						XMLHelper.selectSingleElement(hitElement, "Hit_id").getTextContent()
 					));
 
-					Element hithspsElement = XMLHelper.selectSingleElement(hitElement, "Hit_hsps");
-					ArrayList<Element> hspList = XMLHelper.selectElements(hithspsElement, "Hsp");
-
-					hspsCollection = new ArrayList<Hsp>();
-					for (Element hspElement : hspList) {
-						Double evalue = new Double(XMLHelper.selectSingleElement(hspElement, "Hsp_evalue").getTextContent());
-
-						// add the new hsp only if it pass the specified threshold. It can save lot of memory and some parsing time
-						if (evalue <= maxEScore) {
-							BlastHspBuilder blastHspBuilder = setBlastHspBuilder(hspElement, evalue);
-
-							hspsCollection.add(blastHspBuilder.createBlastHsp());
-						}
-					}
+					hspsCollection = goThroughHspsCollection(maxEScore, hitElement);
 					// finally set the computed hsp collection and create Hit object
 					blastHitBuilder.setHsps(hspsCollection);
 					hitsCollection.add(blastHitBuilder.createBlastHit());
@@ -175,6 +162,29 @@ public class BlastXMLParser implements ResultFactory {
 		logger.info("Parsing of "+targetFile+" finished.");
 
 		return resultsCollection;
+	}
+	private ArrayList<Hsp> goThroughHspsCollection(double maxEScore, Element hitElement)
+			throws XPathExpressionException {
+		ArrayList<Hsp> hspsCollection;
+		Element hithspsElement = XMLHelper.selectSingleElement(hitElement, "Hit_hsps");
+		ArrayList<Element> hspList = XMLHelper.selectElements(hithspsElement, "Hsp");
+
+		hspsCollection = new ArrayList<Hsp>();
+		for (Element hspElement : hspList) {
+			Double evalue = new Double(XMLHelper.selectSingleElement(hspElement, "Hsp_evalue").getTextContent());
+
+			// add the new hsp only if it pass the specified threshold. It can save lot of memory and some parsing time
+			if (evalue <= maxEScore) {
+				insertAfterCheckEvalue(hspsCollection, hspElement, evalue);
+			}
+		}
+		return hspsCollection;
+	}
+	private void insertAfterCheckEvalue(ArrayList<Hsp> hspsCollection, Element hspElement, Double evalue)
+			throws XPathExpressionException {
+		BlastHspBuilder blastHspBuilder = setBlastHspBuilder(hspElement, evalue);
+
+		hspsCollection.add(blastHspBuilder.createBlastHsp());
 	}
 	private BlastHspBuilder setBlastHspBuilder(Element hspElement, Double evalue) throws XPathExpressionException {
 		BlastHspBuilder blastHspBuilder = new BlastHspBuilder();
