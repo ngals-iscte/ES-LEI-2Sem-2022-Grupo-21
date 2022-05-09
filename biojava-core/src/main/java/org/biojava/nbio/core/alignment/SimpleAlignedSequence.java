@@ -411,6 +411,16 @@ public class SimpleAlignedSequence<S extends Sequence<C>, C extends Compound> im
 		}
 
 		// combine sublocations into 1 Location
+		combineSublocations(sublocations);
+		// TODO handle circular alignments
+
+		// check that alignment has correct number of compounds in it to fit original sequence
+		if (step != length || oStep != oMax || pStep != pMax) {
+			throw new IllegalArgumentException("Given sequence does not fit in alignment.");
+		}
+	}
+
+	private void combineSublocations(List<Location> sublocations) {
 		if (sublocations.size() == 0) {
 			location = null;
 		} else if (sublocations.size() == 1) {
@@ -419,12 +429,6 @@ public class SimpleAlignedSequence<S extends Sequence<C>, C extends Compound> im
 			location = new SimpleLocation(sublocations.get(0).getStart(), sublocations.get(sublocations.size() - 1).getEnd(),
 					Strand.UNDEFINED,
 					false, sublocations);
-		}
-		// TODO handle circular alignments
-
-		// check that alignment has correct number of compounds in it to fit original sequence
-		if (step != length || oStep != oMax || pStep != pMax) {
-			throw new IllegalArgumentException("Given sequence does not fit in alignment.");
 		}
 	}
 	
