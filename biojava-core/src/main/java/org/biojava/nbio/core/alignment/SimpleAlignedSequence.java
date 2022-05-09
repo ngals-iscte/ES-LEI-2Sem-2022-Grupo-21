@@ -402,7 +402,9 @@ public class SimpleAlignedSequence<S extends Sequence<C>, C extends Compound> im
 				inGap = true;
 				sublocations.add(new SimpleLocation(start, step, Strand.UNDEFINED));
 			}
-			pStep = pStep(pStep, isGapStep);
+			if (prev != null && !isGapStep) {
+				pStep++;
+			}
 		}
 		if (!inGap) {
 			sublocations.add(new SimpleLocation(start, step, Strand.UNDEFINED));
@@ -415,13 +417,6 @@ public class SimpleAlignedSequence<S extends Sequence<C>, C extends Compound> im
 		if (step != length || oStep != oMax || pStep != pMax) {
 			throw new IllegalArgumentException("Given sequence does not fit in alignment.");
 		}
-	}
-
-	private int pStep(int pStep, boolean isGapStep) {
-		if (prev != null && !isGapStep) {
-			pStep++;
-		}
-		return pStep;
 	}
 
 	private void combineSublocations(List<Location> sublocations) {
