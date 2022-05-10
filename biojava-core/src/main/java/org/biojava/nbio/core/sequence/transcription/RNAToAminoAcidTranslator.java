@@ -128,9 +128,7 @@ public class RNAToAminoAcidTranslator extends
 			AminoAcidCompound aminoAcid = null;
 
 			int i = 1;
-			Table.CaseInsensitiveTriplet triplet = new Table.CaseInsensitiveTriplet(
-					element.getCompoundAt(i++), element.getCompoundAt(i++),
-					element.getCompoundAt(i++));
+			Table.CaseInsensitiveTriplet triplet = new Table.CaseInsensitiveTriplet(element.getCompoundAt(i++), element.getCompoundAt(i++),element.getCompoundAt(i++));
 
 			Codon target = null;
 
@@ -142,16 +140,7 @@ public class RNAToAminoAcidTranslator extends
 			}
 
 			if (doTranslate) {
-				if (target != null)
-					aminoAcid = target.getAminoAcid();
-				if (aminoAcid == null && translateNCodons()) {
-					aminoAcid = unknownAminoAcidCompound;
-				} else {
-					if (first && initMetOnly && target.isStart()) {
-						aminoAcid = methionineAminoAcidCompound;
-					}
-				}
-
+				aminoAcid = targetCheck(first, aminoAcid, target);
 				addCompoundsToList(Arrays.asList(aminoAcid), workingList);
 			}
 
@@ -165,6 +154,25 @@ public class RNAToAminoAcidTranslator extends
 		postProcessCompoundLists(workingList);
 
 		return workingListToSequences(workingList);
+	}
+
+	/**
+	 * @param first
+	 * @param aminoAcid
+	 * @param target
+	 * @return
+	 */
+	private AminoAcidCompound targetCheck(boolean first, AminoAcidCompound aminoAcid, Codon target) {
+		if (target != null)
+			aminoAcid = target.getAminoAcid();
+		if (aminoAcid == null && translateNCodons()) {
+			aminoAcid = unknownAminoAcidCompound;
+		} else {
+			if (first && initMetOnly && target.isStart()) {
+				aminoAcid = methionineAminoAcidCompound;
+			}
+		}
+		return aminoAcid;
 	}
 
 	/**
