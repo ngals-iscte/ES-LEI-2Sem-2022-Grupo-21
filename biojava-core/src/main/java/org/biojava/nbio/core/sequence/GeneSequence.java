@@ -39,9 +39,10 @@ import java.util.LinkedHashMap;
  */
 public class GeneSequence extends DNASequence {
 
+	private GeneSequenceProduct geneSequenceProduct = new GeneSequenceProduct();
+
 	private final static Logger logger = LoggerFactory.getLogger(GeneSequence.class);
 
-	private final LinkedHashMap<String, TranscriptSequence> transcriptSequenceHashMap = new LinkedHashMap<String, TranscriptSequence>();
 	private final LinkedHashMap<String, IntronSequence> intronSequenceHashMap = new LinkedHashMap<String, IntronSequence>();
 	private final LinkedHashMap<String, ExonSequence> exonSequenceHashMap = new LinkedHashMap<String, ExonSequence>();
 	private final ArrayList<IntronSequence> intronSequenceList = new ArrayList<IntronSequence>();
@@ -172,7 +173,7 @@ public class GeneSequence extends DNASequence {
 	 * @return the transcript
 	 */
 	public TranscriptSequence getTranscript(String accession) {
-		return transcriptSequenceHashMap.get(accession);
+		return geneSequenceProduct.getTranscript(accession);
 	}
 
 	/**
@@ -180,7 +181,7 @@ public class GeneSequence extends DNASequence {
 	 * @return transcripts
 	 */
 	public LinkedHashMap<String, TranscriptSequence> getTranscripts() {
-		return transcriptSequenceHashMap;
+		return geneSequenceProduct.getTranscriptSequenceHashMap();
 	}
 
 	/**
@@ -189,7 +190,7 @@ public class GeneSequence extends DNASequence {
 	 * @return transcriptsequence
 	 */
 	public TranscriptSequence removeTranscript(String accession) {
-		return transcriptSequenceHashMap.remove(accession);
+		return geneSequenceProduct.removeTranscript(accession);
 	}
 
 	/**
@@ -201,13 +202,7 @@ public class GeneSequence extends DNASequence {
 	 * @throws Exception If the accession id is already used
 	 */
 	public TranscriptSequence addTranscript(AccessionID accession, int begin, int end) throws Exception {
-		if (transcriptSequenceHashMap.containsKey(accession.getID())) {
-			throw new Exception("Duplicate accesion id " + accession.getID());
-		}
-		TranscriptSequence transcriptSequence = new TranscriptSequence(this, begin, end);
-		transcriptSequence.setAccession(accession);
-		transcriptSequenceHashMap.put(accession.getID(), transcriptSequence);
-		return transcriptSequence;
+		return geneSequenceProduct.addTranscript(accession, begin, end, this);
 	}
 
 	/**
