@@ -235,7 +235,7 @@ public class DNATest {
 	public void kmerNonOverlap() throws CompoundNotFoundException {
 		DNASequence d = new DNASequence("ATGTGCA");
 		List<SequenceView<NucleotideCompound>> l =
-				SequenceMixin.nonOverlappingKmers(d, 3);
+				SimpleSequenceIterator.nonOverlappingKmers(d, 3);
 		assertThat("Asserting we generate only 2 k-mers", l.size(), is(2));
 		assertThat("Asserting first k-mer", l.get(0).getSequenceAsString(), is("ATG"));
 		assertThat("Asserting second k-mer", l.get(1).getSequenceAsString(), is("TGC"));
@@ -245,7 +245,7 @@ public class DNATest {
 	public void kmerOverlap() throws CompoundNotFoundException {
 		DNASequence d = new DNASequence("ATGTT");
 		List<SequenceView<NucleotideCompound>> l =
-				SequenceMixin.overlappingKmers(d, 3);
+				SimpleSequenceIterator.overlappingKmers(d, 3);
 		assertThat("Asserting we generate only 3 k-mers", l.size(), is(3));
 		assertThat("Asserting first k-mer", l.get(0).getSequenceAsString(), is("ATG"));
 		assertThat("Asserting second k-mer", l.get(1).getSequenceAsString(), is("TGT"));
@@ -256,7 +256,7 @@ public class DNATest {
 	public void kmerOverlapExceedingSequenceLength() throws CompoundNotFoundException {
 		DNASequence d = new DNASequence("ATGTT");
 		List<SequenceView<NucleotideCompound>> l =
-				SequenceMixin.overlappingKmers(d, 2);
+				SimpleSequenceIterator.overlappingKmers(d, 2);
 		assertThat("Asserting we generate 4 k-mers", l.size(), is(4));
 		assertThat("Asserting first k-mer", l.get(0).getSequenceAsString(), is("AT"));
 		assertThat("Asserting second k-mer", l.get(2).getSequenceAsString(), is("GT"));

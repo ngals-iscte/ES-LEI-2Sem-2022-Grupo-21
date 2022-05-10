@@ -177,12 +177,12 @@ public class SingleCompoundSequenceReader<C extends Compound> implements ProxySe
 	}
 
 	/**
-	 * Returns an instance of {@link SequenceMixin.SequenceIterator}
+	 * Returns an instance of {@link SimpleSequenceIterator.SequenceIterator}
 	 */
 
 	@Override
 	public Iterator<C> iterator() {
-		return new SequenceMixin.SequenceIterator<C>(this);
+		return new SimpleSequenceIterator.SequenceIterator<C>(this);
 	}
 
 	@Override
