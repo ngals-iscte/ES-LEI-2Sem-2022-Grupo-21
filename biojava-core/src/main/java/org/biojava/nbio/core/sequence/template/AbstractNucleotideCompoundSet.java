@@ -67,33 +67,14 @@ public abstract class AbstractNucleotideCompoundSet<C extends NucleotideCompound
 	protected void calculateIndirectAmbiguities() {
 		Map<NucleotideCompound, List<NucleotideCompound>> equivalentsMap = new HashMap<NucleotideCompound, List<NucleotideCompound>>();
 
-		List<NucleotideCompound> ambiguousCompounds = getAllCompounds().stream()		 
-                                                                               .filter(compound -> compound.isAmbiguous())
-                                                                               .collect(Collectors.toCollection(ArrayList::new));
+		List<NucleotideCompound> ambiguousCompounds = getAllCompounds().stream().filter(compound -> compound.isAmbiguous()).collect(Collectors.toCollection(ArrayList::new));
                         
 
 		for(NucleotideCompound sourceCompound: ambiguousCompounds) {
 			Set<NucleotideCompound> compoundConstituents = sourceCompound.getConstituents();
 			for(NucleotideCompound targetCompound: ambiguousCompounds) {
 				Set<NucleotideCompound> targetConstituents = targetCompound.getConstituents();
-				if(targetConstituents.containsAll(compoundConstituents)) {
-					NucleotideCompound lcSourceCompound = toLowerCase(sourceCompound);
-					NucleotideCompound lcTargetCompound = toLowerCase(targetCompound);
-
-				//equivalentsMap.put(sourceCompound, targetCompound);
-			//      equivalentsMap.put(sourceCompound, lcTargetCompound);
-
-
-					checkAdd(equivalentsMap, sourceCompound, targetCompound);
-					checkAdd(equivalentsMap, sourceCompound, lcTargetCompound);
-
-					checkAdd(equivalentsMap,targetCompound,sourceCompound);
-					checkAdd(equivalentsMap, lcTargetCompound, sourceCompound);
-
-					checkAdd(equivalentsMap, lcSourceCompound, targetCompound);
-					checkAdd(equivalentsMap, lcSourceCompound, lcTargetCompound);
-
-				}
+				ifContainsAll(equivalentsMap, sourceCompound, compoundConstituents, targetCompound, targetConstituents);
 			}
 		}
 
@@ -108,10 +89,34 @@ public abstract class AbstractNucleotideCompoundSet<C extends NucleotideCompound
 		}
 	}
 
+	/**
+	 * @param equivalentsMap
+	 * @param sourceCompound
+	 * @param compoundConstituents
+	 * @param targetCompound
+	 * @param targetConstituents
+	 */
+	private void ifContainsAll(Map<NucleotideCompound, List<NucleotideCompound>> equivalentsMap,
+			NucleotideCompound sourceCompound, Set<NucleotideCompound> compoundConstituents,
+			NucleotideCompound targetCompound, Set<NucleotideCompound> targetConstituents) {
+		if(targetConstituents.containsAll(compoundConstituents)) {
+			NucleotideCompound lcSourceCompound = toLowerCase(sourceCompound);
+			NucleotideCompound lcTargetCompound = toLowerCase(targetCompound);
+
+			checkAdd(equivalentsMap, sourceCompound, targetCompound);
+			checkAdd(equivalentsMap, sourceCompound, lcTargetCompound);
+
+			checkAdd(equivalentsMap,targetCompound,sourceCompound);
+			checkAdd(equivalentsMap, lcTargetCompound, sourceCompound);
+
+			checkAdd(equivalentsMap, lcSourceCompound, targetCompound);
+			checkAdd(equivalentsMap, lcSourceCompound, lcTargetCompound);
+
+		}
+	}
+
 	private void checkAdd(
-		Map<NucleotideCompound, List<NucleotideCompound>> equivalentsMap,
-		NucleotideCompound key,
-		NucleotideCompound value) {
+		Map<NucleotideCompound, List<NucleotideCompound>> equivalentsMap,NucleotideCompound key,NucleotideCompound value) {
 
 
 			List<NucleotideCompound> listS = equivalentsMap.get(key);
@@ -124,7 +129,7 @@ public abstract class AbstractNucleotideCompoundSet<C extends NucleotideCompound
 
 }
 
-private NucleotideCompound toLowerCase(NucleotideCompound compound) {
+	private NucleotideCompound toLowerCase(NucleotideCompound compound) {
 		return getCompoundForString(compound.getBase().toLowerCase());
 	}
 
