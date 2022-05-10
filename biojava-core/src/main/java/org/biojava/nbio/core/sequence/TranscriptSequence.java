@@ -39,10 +39,13 @@ import java.util.LinkedHashMap;
  */
 public class TranscriptSequence extends DNASequence {
 
+	private TranscriptSequenceProduct2 transcriptSequenceProduct2 = new TranscriptSequenceProduct2();
+
 	private TranscriptSequenceProduct transcriptSequenceProduct = new TranscriptSequenceProduct();
 
 	public final static Logger logger = LoggerFactory.getLogger(TranscriptSequence.class);
 
+	private final LinkedHashMap<String, CDSSequence> cdsSequenceHashMap = new LinkedHashMap<String, CDSSequence>();
 	private GeneSequence parentGeneSequence = null;
 
 	/**
@@ -94,7 +97,14 @@ public class TranscriptSequence extends DNASequence {
 	 * @return
 	 */
 	public CDSSequence removeCDS(String accession) {
-		return transcriptSequenceProduct.removeCDS(accession);
+		for (CDSSequence cdsSequence : transcriptSequenceProduct2.getCdsSequenceList()) {
+			if (cdsSequence.getAccession().getID().equals(accession)) {
+				transcriptSequenceProduct2.getCdsSequenceList().remove(cdsSequence);
+				cdsSequenceHashMap.remove(accession);
+				return cdsSequence;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -102,7 +112,7 @@ public class TranscriptSequence extends DNASequence {
 	 * @return
 	 */
 	public LinkedHashMap<String, CDSSequence> getCDSSequences() {
-		return transcriptSequenceProduct.getCdsSequenceHashMap();
+		return cdsSequenceHashMap;
 	}
 
 	/**
@@ -114,7 +124,15 @@ public class TranscriptSequence extends DNASequence {
 	 * @return
 	 */
 	public CDSSequence addCDS(AccessionID accession, int begin, int end, int phase) throws Exception {
-		return transcriptSequenceProduct.addCDS(accession, begin, end, phase, this);
+		if (cdsSequenceHashMap.containsKey(accession.getID())) {
+			throw new Exception("Duplicate accession id " + accession.getID());
+		}
+		CDSSequence cdsSequence = new CDSSequence(this, begin, end, phase); //sense should be the same as parent
+		cdsSequence.setAccession(accession);
+		transcriptSequenceProduct2.getCdsSequenceList().add(cdsSequence);
+		Collections.sort(transcriptSequenceProduct2.getCdsSequenceList(), new CDSComparator());
+		cdsSequenceHashMap.put(accession.getID(), cdsSequence);
+		return cdsSequence;
 	}
 
 	/**
@@ -136,7 +154,14 @@ public class TranscriptSequence extends DNASequence {
 	 * @return
 	 */
 	public ArrayList<ProteinSequence> getProteinCDSSequences() {
-		return transcriptSequenceProduct.getProteinCDSSequences(this);
+		ArrayList<ProteinSequence> proteinSequenceList = new ArrayList<ProteinSequence>();
+		for (int i = 0; i < transcriptSequenceProduct2.getCdsSequenceList().size(); i++) {
+			ProteinSequence proteinSequence = transcriptSequenceProduct2.proteinSequence(i, this);
+			CDSSequence cdsSequence = transcriptSequenceProduct2.getCdsSequenceList().get(i);
+			proteinSequence.setParentDNASequence(cdsSequence, 1, cdsSequence.getLength());
+			proteinSequenceList.add(proteinSequence);
+		}
+		return proteinSequenceList;
 	}
 
 	/**
@@ -144,7 +169,20 @@ public class TranscriptSequence extends DNASequence {
 	 * @return
 	 */
 	public DNASequence getDNACodingSequence() {
-		return transcriptSequenceProduct.getDNACodingSequence(this);
+		StringBuilder sb = new StringBuilder();
+		for (CDSSequence cdsSequence : transcriptSequenceProduct2.getCdsSequenceList()) {
+			sb.append(cdsSequence.getCodingSequence());
+		}
+
+		DNASequence dnaSequence = null;
+		try {
+			dnaSequence = new DNASequence(sb.toString().toUpperCase());
+		} catch (CompoundNotFoundException e) {
+			// if I understand this should not happen, please correct if I'm wrong - JD 2014-10-24
+			logger.error("Could not create DNA coding sequence, {}. This is most likely a bug.", e.getMessage());
+		}
+		dnaSequence.setAccession(new AccessionID(this.getAccession().getID()));
+		return dnaSequence;
 	}
 
 	/**
@@ -152,7 +190,7 @@ public class TranscriptSequence extends DNASequence {
 	 * @return
 	 */
 	public ProteinSequence getProteinSequence() {
-		return transcriptSequenceProduct.getProteinSequence(TranscriptionEngine.getDefault(), this);
+		return getProteinSequence(TranscriptionEngine.getDefault());
 	}
 
 	/**
@@ -161,7 +199,12 @@ public class TranscriptSequence extends DNASequence {
 	 * @return
 	 */
 	public ProteinSequence getProteinSequence(TranscriptionEngine engine) {
-		return transcriptSequenceProduct.getProteinSequence(engine, this);
+		DNASequence dnaCodingSequence = getDNACodingSequence();
+		RNASequence rnaCodingSequence = dnaCodingSequence.getRNASequence(engine);
+		ProteinSequence proteinSequence = rnaCodingSequence.getProteinSequence(engine);
+		proteinSequence.setAccession(new AccessionID(this.getAccession().getID()));
+
+		return proteinSequence;
 	}
 
 	/**
