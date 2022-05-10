@@ -89,33 +89,40 @@ public class RnaSequenceView extends SequenceProxyView<NucleotideCompound> imple
 	}
 
 	protected void buildTranslators() {
-		Map<NucleotideCompound, NucleotideCompound> localDnaToRna =
-				new HashMap<NucleotideCompound, NucleotideCompound>();
-		Map<NucleotideCompound, NucleotideCompound> localRnaToDna =
-				new HashMap<NucleotideCompound, NucleotideCompound>();
-
-		NucleotideCompound thymine =
-				getViewedSequence().getCompoundSet().getCompoundForString("T");
-		NucleotideCompound lowerThymine =
-				getViewedSequence().getCompoundSet().getCompoundForString("t");
-
+		Map<NucleotideCompound, NucleotideCompound> localDnaToRna = new HashMap<NucleotideCompound, NucleotideCompound>();
+		Map<NucleotideCompound, NucleotideCompound> localRnaToDna = new HashMap<NucleotideCompound, NucleotideCompound>();
+		NucleotideCompound thymine = getViewedSequence().getCompoundSet().getCompoundForString("T");
+		NucleotideCompound lowerThymine = getViewedSequence().getCompoundSet().getCompoundForString("t");
 		for (NucleotideCompound dnaBase : getViewedSequence().getCompoundSet().getAllCompounds()) {
 			NucleotideCompound equivalent;
-			if (dnaBase.equals(thymine)) {
-				equivalent = rnaCompounds.getCompoundForString("U");
-			}
-			else if (dnaBase.equals(lowerThymine)) {
-				equivalent = rnaCompounds.getCompoundForString("u");
-			}
-			else {
-				equivalent = rnaCompounds.getCompoundForString(
-					dnaBase.toString());
-			}
+			equivalent = dnaBaseComparer(thymine, lowerThymine, dnaBase);
 			localDnaToRna.put(dnaBase, equivalent);
 			localRnaToDna.put(equivalent, dnaBase);
 		}
 		this.dnaToRna = localDnaToRna;
 		this.rnaToDna = localRnaToDna;
+	}
+
+	/**
+	 * @param thymine
+	 * @param lowerThymine
+	 * @param dnaBase
+	 * @return
+	 */
+	private NucleotideCompound dnaBaseComparer(NucleotideCompound thymine, NucleotideCompound lowerThymine,
+			NucleotideCompound dnaBase) {
+		NucleotideCompound equivalent;
+		if (dnaBase.equals(thymine)) {
+			equivalent = rnaCompounds.getCompoundForString("U");
+		}
+		else if (dnaBase.equals(lowerThymine)) {
+			equivalent = rnaCompounds.getCompoundForString("u");
+		}
+		else {
+			equivalent = rnaCompounds.getCompoundForString(
+				dnaBase.toString());
+		}
+		return equivalent;
 	}
 
 	@Override

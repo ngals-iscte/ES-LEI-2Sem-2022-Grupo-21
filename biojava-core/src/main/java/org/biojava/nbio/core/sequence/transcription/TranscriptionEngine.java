@@ -80,7 +80,7 @@ public class TranscriptionEngine {
 	private final CompoundSet<NucleotideCompound> rnaCompounds;
 	private final CompoundSet<AminoAcidCompound> aminoAcidCompounds;
 
-	private TranscriptionEngine(Table table,
+	TranscriptionEngine(Table table,
 			RNAToAminoAcidTranslator rnaAminoAcidTranslator,
 			DNAToRNATranslator dnaRnaTranslator,
 			SequenceCreatorInterface<AminoAcidCompound> proteinSequenceCreator,
@@ -174,22 +174,8 @@ public class TranscriptionEngine {
 	 */
 	public static class Builder {
 
+		private BuilderProduct builderProduct = new BuilderProduct();
 		private Table table;
-		private RNAToAminoAcidTranslator rnaAminoAcidTranslator;
-		private DNAToRNATranslator dnaRnaTranslator;
-		private SequenceCreatorInterface<AminoAcidCompound> proteinSequenceCreator;
-		private SequenceCreatorInterface<NucleotideCompound> rnaSequenceCreator;
-		private CompoundSet<NucleotideCompound> dnaCompounds;
-		private CompoundSet<NucleotideCompound> rnaCompounds;
-		private CompoundSet<AminoAcidCompound> aminoAcidCompounds;
-		private boolean initMet = true;
-		private boolean trimStop = true;
-		private boolean translateNCodons = true;
-		private boolean decorateRna = false;
-		// Set at false for backwards compatibility
-		private boolean stopAtStopCodons = false;
-		private boolean waitForStartCodon = false;
-
 		/**
 		 * The method to finish any calls to the builder with which returns a
 		 * transcription engine. The engine is designed to provide everything
@@ -197,10 +183,7 @@ public class TranscriptionEngine {
 		 * transcription.
 		 */
 		public TranscriptionEngine build() {
-			return new TranscriptionEngine(getTable(),
-					getRnaAminoAcidTranslator(), getDnaRnaTranslator(),
-					getProteinCreator(), getRnaCreator(), getDnaCompounds(),
-					getRnaCompounds(), getAminoAcidCompounds());
+			return builderProduct.build(this);
 		}
 
 		// ---- START OF BUILDER METHODS
@@ -228,57 +211,47 @@ public class TranscriptionEngine {
 		}
 
 		public Builder dnaCompounds(CompoundSet<NucleotideCompound> compounds) {
-			this.dnaCompounds = compounds;
-			return this;
+			return builderProduct.dnaCompounds(compounds, this);
 		}
 
 		public Builder rnaCompounds(CompoundSet<NucleotideCompound> compounds) {
-			this.rnaCompounds = compounds;
-			return this;
+			return builderProduct.rnaCompounds(compounds, this);
 		}
 
 		public Builder aminoAcidsCompounds(
 				CompoundSet<AminoAcidCompound> compounds) {
-			this.aminoAcidCompounds = compounds;
-			return this;
+			return builderProduct.aminoAcidsCompounds(compounds, this);
 		}
 
 		public Builder dnaRnaTranslator(DNAToRNATranslator translator) {
-			this.dnaRnaTranslator = translator;
-			return this;
+			return builderProduct.dnaRnaTranslator(translator, this);
 		}
 
 		public Builder rnaAminoAcidTranslator(
 				RNAToAminoAcidTranslator translator) {
-			this.rnaAminoAcidTranslator = translator;
-			return this;
+			return builderProduct.rnaAminoAcidTranslator(translator, this);
 		}
 
 		public Builder proteinCreator(
 				SequenceCreatorInterface<AminoAcidCompound> creator) {
-			this.proteinSequenceCreator = creator;
-			return this;
+			return builderProduct.proteinCreator(creator, this);
 		}
 
 		public Builder rnaCreator(
 				SequenceCreatorInterface<NucleotideCompound> creator) {
-			this.rnaSequenceCreator = creator;
-			return this;
+			return builderProduct.rnaCreator(creator, this);
 		}
 
 		public Builder initMet(boolean initMet) {
-			this.initMet = initMet;
-			return this;
+			return builderProduct.initMet(initMet, this);
 		}
 
 		public Builder trimStop(boolean trimStop) {
-			this.trimStop = trimStop;
-			return this;
+			return builderProduct.trimStop(trimStop, this);
 		}
 
 		public Builder translateNCodons(boolean translateNCodons) {
-			this.translateNCodons = translateNCodons;
-			return this;
+			return builderProduct.translateNCodons(translateNCodons, this);
 		}
 
 		/**
@@ -286,8 +259,7 @@ public class TranscriptionEngine {
 		 * sequence will be the stop codon
 		 */
 		public Builder stopAtStopCodons(boolean stopAtStopCodons) {
-			this.stopAtStopCodons = stopAtStopCodons;
-			return this;
+			return builderProduct.stopAtStopCodons(stopAtStopCodons, this);
 		}
 
 		/**
@@ -295,8 +267,7 @@ public class TranscriptionEngine {
 		 * encountered
 		 */
 		public Builder waitForStartCodon(boolean waitForStartCodon) {
-			this.waitForStartCodon = waitForStartCodon;
-			return this;
+			return builderProduct.waitForStartCodon(waitForStartCodon, this);
 		}
 
 		/**
@@ -304,72 +275,10 @@ public class TranscriptionEngine {
 		 * their own objects but are views onto the base DNA sequence.
 		 */
 		public Builder decorateRna(boolean decorateRna) {
-			this.decorateRna = decorateRna;
-			return this;
+			return builderProduct.decorateRna(decorateRna, this);
 		}
 
-		// ------ INTERNAL BUILDERS with defaults if exists
-		private CompoundSet<NucleotideCompound> getDnaCompounds() {
-			if (dnaCompounds != null) {
-				return dnaCompounds;
-			}
-			return AmbiguityDNACompoundSet.getDNACompoundSet();
-		}
-
-		private CompoundSet<NucleotideCompound> getRnaCompounds() {
-			if (rnaCompounds != null) {
-				return rnaCompounds;
-			}
-			return AmbiguityRNACompoundSet.getRNACompoundSet();
-		}
-
-		private CompoundSet<AminoAcidCompound> getAminoAcidCompounds() {
-			if (aminoAcidCompounds != null) {
-				return aminoAcidCompounds;
-			}
-			return AminoAcidCompoundSet.getAminoAcidCompoundSet();
-		}
-
-		private DNAToRNATranslator getDnaRnaTranslator() {
-			if (dnaRnaTranslator != null) {
-				return dnaRnaTranslator;
-			}
-			return new DNAToRNATranslator(new RNASequenceCreator(
-					getRnaCompounds()), getDnaCompounds(), getRnaCompounds(),
-					isDecorateRna());
-		}
-
-		private RNAToAminoAcidTranslator getRnaAminoAcidTranslator() {
-			if (rnaAminoAcidTranslator != null) {
-				return rnaAminoAcidTranslator;
-			}
-			return new RNAToAminoAcidTranslator(getProteinCreator(),
-					getRnaCompounds(), getCodons(), getAminoAcidCompounds(),
-					getTable(), isTrimStop(), isInitMet(),
-					isTranslateNCodons(), isStopAtStopCodons(),
-					isWaitForStartCodon());
-		}
-
-		private CompoundSet<Codon> getCodons() {
-			return getTable().getCodonCompoundSet(getRnaCompounds(),
-					getAminoAcidCompounds());
-		}
-
-		private SequenceCreatorInterface<AminoAcidCompound> getProteinCreator() {
-			if (proteinSequenceCreator != null) {
-				return proteinSequenceCreator;
-			}
-			return new ProteinSequenceCreator(getAminoAcidCompounds());
-		}
-
-		private SequenceCreatorInterface<NucleotideCompound> getRnaCreator() {
-			if (rnaSequenceCreator != null) {
-				return rnaSequenceCreator;
-			}
-			return new RNASequenceCreator(getRnaCompounds());
-		}
-
-		private Table getTable() {
+		public Table getTable() {
 			if (table != null) {
 				return table;
 			}
@@ -378,27 +287,27 @@ public class TranscriptionEngine {
 		}
 
 		private boolean isInitMet() {
-			return initMet;
+			return builderProduct.getInitMet();
 		}
 
 		private boolean isTrimStop() {
-			return trimStop;
+			return builderProduct.getTrimStop();
 		}
 
 		private boolean isTranslateNCodons() {
-			return translateNCodons;
+			return builderProduct.getTranslateNCodons();
 		}
 
 		private boolean isDecorateRna() {
-			return decorateRna;
+			return builderProduct.getDecorateRna();
 		}
 
 		private boolean isStopAtStopCodons() {
-			return stopAtStopCodons;
+			return builderProduct.getStopAtStopCodons();
 		}
 
 		private boolean isWaitForStartCodon() {
-			return waitForStartCodon;
+			return builderProduct.getWaitForStartCodon();
 		}
 	}
 }
