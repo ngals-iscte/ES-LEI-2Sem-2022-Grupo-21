@@ -141,7 +141,6 @@ public class RNAToAminoAcidTranslator extends
 
 			if (doTranslate) {
 				aminoAcid = targetCheck(first, aminoAcid, target);
-
 				addCompoundsToList(Arrays.asList(aminoAcid), workingList);
 			}
 
