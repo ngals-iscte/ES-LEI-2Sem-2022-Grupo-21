@@ -30,6 +30,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 //import org.slf4j.Logger;
@@ -196,33 +197,13 @@ public class InputStreamProvider {
 
 		else if ( fileName.endsWith(".zip")){
 
-			ZipFile zipfile = new ZipFile(f);
-
-			// stream to first entry is returned ...
-			ZipEntry entry;
-			Enumeration<? extends ZipEntry> e = zipfile.entries();
-			if ( e.hasMoreElements()){
-				entry = e.nextElement();
-				inputStream = zipfile.getInputStream(entry);
-			} else {
-				throw new IOException ("Zip file has no entries");
-			}
+			inputStream = zipInputFile(f, inputStream);
 
 		}
 
 		else if ( fileName.endsWith(".jar")) {
 
-			JarFile jarFile = new JarFile(f);
-
-			// stream to first entry is returned
-			JarEntry entry;
-			Enumeration<JarEntry> e = jarFile.entries();
-			if ( e.hasMoreElements()){
-				entry = e.nextElement();
-				inputStream = jarFile.getInputStream(entry);
-			} else {
-				throw new IOException ("Jar file has no entries");
-			}
+			inputStream = jarInputFile(f, inputStream);
 		}
 
 		else if ( fileName.endsWith(".Z")) {
@@ -237,6 +218,49 @@ public class InputStreamProvider {
 			inputStream = getInputStreamFromFile(f);
 		}
 
+		return inputStream;
+	}
+
+	/**
+	 * @param f
+	 * @param inputStream
+	 * @return
+	 * @throws ZipException
+	 * @throws IOException
+	 */
+	private InputStream zipInputFile(File f, InputStream inputStream) throws ZipException, IOException {
+		ZipFile zipfile = new ZipFile(f);
+
+		// stream to first entry is returned ...
+		ZipEntry entry;
+		Enumeration<? extends ZipEntry> e = zipfile.entries();
+		if ( e.hasMoreElements()){
+			entry = e.nextElement();
+			inputStream = zipfile.getInputStream(entry);
+		} else {
+			throw new IOException ("Zip file has no entries");
+		}
+		return inputStream;
+	}
+
+	/**
+	 * @param f
+	 * @param inputStream
+	 * @return
+	 * @throws IOException
+	 */
+	private InputStream jarInputFile(File f, InputStream inputStream) throws IOException {
+		JarFile jarFile = new JarFile(f);
+
+		// stream to first entry is returned
+		JarEntry entry;
+		Enumeration<JarEntry> e = jarFile.entries();
+		if ( e.hasMoreElements()){
+			entry = e.nextElement();
+			inputStream = jarFile.getInputStream(entry);
+		} else {
+			throw new IOException ("Jar file has no entries");
+		}
 		return inputStream;
 	}
 
