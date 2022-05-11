@@ -39,12 +39,13 @@ import java.util.LinkedHashMap;
  */
 public class TranscriptSequence extends DNASequence {
 
-	private final static Logger logger = LoggerFactory.getLogger(TranscriptSequence.class);
+	private TranscriptSequenceProduct2 transcriptSequenceProduct2 = new TranscriptSequenceProduct2();
 
-	private final ArrayList<CDSSequence> cdsSequenceList = new ArrayList<CDSSequence>();
+	private TranscriptSequenceProduct transcriptSequenceProduct = new TranscriptSequenceProduct();
+
+	public final static Logger logger = LoggerFactory.getLogger(TranscriptSequence.class);
+
 	private final LinkedHashMap<String, CDSSequence> cdsSequenceHashMap = new LinkedHashMap<String, CDSSequence>();
-	private StartCodonSequence startCodonSequence = null;
-	private StopCodonSequence stopCodonSequence = null;
 	private GeneSequence parentGeneSequence = null;
 
 	/**
@@ -96,9 +97,9 @@ public class TranscriptSequence extends DNASequence {
 	 * @return
 	 */
 	public CDSSequence removeCDS(String accession) {
-		for (CDSSequence cdsSequence : cdsSequenceList) {
+		for (CDSSequence cdsSequence : transcriptSequenceProduct2.getCdsSequenceList()) {
 			if (cdsSequence.getAccession().getID().equals(accession)) {
-				cdsSequenceList.remove(cdsSequence);
+				transcriptSequenceProduct2.getCdsSequenceList().remove(cdsSequence);
 				cdsSequenceHashMap.remove(accession);
 				return cdsSequence;
 			}
@@ -128,8 +129,8 @@ public class TranscriptSequence extends DNASequence {
 		}
 		CDSSequence cdsSequence = new CDSSequence(this, begin, end, phase); //sense should be the same as parent
 		cdsSequence.setAccession(accession);
-		cdsSequenceList.add(cdsSequence);
-		Collections.sort(cdsSequenceList, new CDSComparator());
+		transcriptSequenceProduct2.getCdsSequenceList().add(cdsSequence);
+		Collections.sort(transcriptSequenceProduct2.getCdsSequenceList(), new CDSComparator());
 		cdsSequenceHashMap.put(accession.getID(), cdsSequence);
 		return cdsSequence;
 	}
@@ -154,63 +155,13 @@ public class TranscriptSequence extends DNASequence {
 	 */
 	public ArrayList<ProteinSequence> getProteinCDSSequences() {
 		ArrayList<ProteinSequence> proteinSequenceList = new ArrayList<ProteinSequence>();
-		for (int i = 0; i < cdsSequenceList.size(); i++) {
-			ProteinSequence proteinSequence = proteinSequence(i);
-			CDSSequence cdsSequence = cdsSequenceList.get(i);
+		for (int i = 0; i < transcriptSequenceProduct2.getCdsSequenceList().size(); i++) {
+			ProteinSequence proteinSequence = transcriptSequenceProduct2.proteinSequence(i, this);
+			CDSSequence cdsSequence = transcriptSequenceProduct2.getCdsSequenceList().get(i);
 			proteinSequence.setParentDNASequence(cdsSequence, 1, cdsSequence.getLength());
 			proteinSequenceList.add(proteinSequence);
 		}
 		return proteinSequenceList;
-	}
-
-	private ProteinSequence proteinSequence(int i) {
-		DNASequence dnaCodingSequence = dnaCodingSequence(i);
-		CDSSequence cdsSequence = cdsSequenceList.get(i);
-		RNASequence rnaCodingSequence = dnaCodingSequence.getRNASequence(TranscriptionEngine.getDefault());
-		ProteinSequence proteinSequence = rnaCodingSequence.getProteinSequence(TranscriptionEngine.getDefault());
-		proteinSequence.setAccession(new AccessionID(cdsSequence.getAccession().getID()));
-		return proteinSequence;
-	}
-
-	private DNASequence dnaCodingSequence(int i) {
-		String codingSequence = codingSequence(i);
-		DNASequence dnaCodingSequence = null;
-		try {
-			dnaCodingSequence = new DNASequence(codingSequence.toUpperCase());
-		} catch (CompoundNotFoundException e) {
-			logger.error("Could not create DNA coding sequence, {}. This is most likely a bug.", e.getMessage());
-		}
-		return dnaCodingSequence;
-	}
-
-	private String codingSequence(int i) {
-		CDSSequence cdsSequence = cdsSequenceList.get(i);
-		String codingSequence = cdsSequence.getCodingSequence();
-		if (this.getStrand() == Strand.NEGATIVE) {
-			codingSequence = checkCodingSequence(i, cdsSequence, codingSequence);
-		} else {
-			codingSequence = checkCodingSequence(i, cdsSequence, codingSequence);
-		}
-		return codingSequence;
-	}
-
-	private String checkCodingSequence(int i, CDSSequence cdsSequence, String codingSequence) {
-		if (cdsSequence.phase == 1) {
-			codingSequence = codingSequence.substring(1, codingSequence.length());
-		} else if (cdsSequence.phase == 2) {
-			codingSequence = codingSequence.substring(2, codingSequence.length());
-		}
-		if (i < cdsSequenceList.size() - 1) {
-			CDSSequence nextCDSSequence = cdsSequenceList.get(i + 1);
-			if (nextCDSSequence.phase == 1) {
-				String nextCodingSequence = nextCDSSequence.getCodingSequence();
-				codingSequence = codingSequence + nextCodingSequence.substring(0, 1);
-			} else if (nextCDSSequence.phase == 2) {
-				String nextCodingSequence = nextCDSSequence.getCodingSequence();
-				codingSequence = codingSequence + nextCodingSequence.substring(0, 2);
-			}
-		}
-		return codingSequence;
 	}
 
 	/**
@@ -219,7 +170,7 @@ public class TranscriptSequence extends DNASequence {
 	 */
 	public DNASequence getDNACodingSequence() {
 		StringBuilder sb = new StringBuilder();
-		for (CDSSequence cdsSequence : cdsSequenceList) {
+		for (CDSSequence cdsSequence : transcriptSequenceProduct2.getCdsSequenceList()) {
 			sb.append(cdsSequence.getCodingSequence());
 		}
 
@@ -260,7 +211,7 @@ public class TranscriptSequence extends DNASequence {
 	 * @return the startCodonSequence
 	 */
 	public StartCodonSequence getStartCodonSequence() {
-		return startCodonSequence;
+		return transcriptSequenceProduct.getStartCodonSequence();
 	}
 
 	/**
@@ -271,15 +222,14 @@ public class TranscriptSequence extends DNASequence {
 	 * @param end
 	 */
 	public void addStartCodonSequence(AccessionID accession, int begin, int end) {
-		this.startCodonSequence = new StartCodonSequence(this, begin, end);
-		startCodonSequence.setAccession(accession);
+		transcriptSequenceProduct.addStartCodonSequence(accession, begin, end, this);
 	}
 
 	/**
 	 * @return the stopCodonSequence
 	 */
 	public StopCodonSequence getStopCodonSequence() {
-		return stopCodonSequence;
+		return transcriptSequenceProduct.getStopCodonSequence();
 	}
 
 	/**
@@ -290,7 +240,6 @@ public class TranscriptSequence extends DNASequence {
 	 * @param end
 	 */
 	public void addStopCodonSequence(AccessionID accession, int begin, int end) {
-		this.stopCodonSequence = new StopCodonSequence(this, begin, end);
-		stopCodonSequence.setAccession(accession);
+		transcriptSequenceProduct.addStopCodonSequence(accession, begin, end, this);
 	}
 }
