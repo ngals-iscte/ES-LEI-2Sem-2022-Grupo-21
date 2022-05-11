@@ -122,7 +122,7 @@ public class SequenceProxyView<C extends Compound> implements SequenceView<C> {
 
 	@Override
 	public Iterator<C> iterator() {
-		return new SequenceMixin.SequenceIterator<C>(this);
+		return new SimpleSequenceIterator.SequenceIterator<C>(this);
 	}
 
 	@Override
