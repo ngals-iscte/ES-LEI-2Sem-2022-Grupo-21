@@ -91,7 +91,8 @@ import java.io.*;
  * 	amend logging code in uncompress(String, FileOutputStream)
  */
 public class UncompressInputStream extends FilterInputStream {
-	private final static Logger logger
+	private UncompressInputStreamProduct uncompressInputStreamProduct = new UncompressInputStreamProduct(in);
+	final static Logger logger
 		= LoggerFactory.getLogger(UncompressInputStream.class);
 
 	/**
@@ -100,7 +101,7 @@ public class UncompressInputStream extends FilterInputStream {
 	 */
 	public UncompressInputStream(InputStream is) throws IOException {
 		super(is);
-		parse_header();
+		uncompressInputStreamProduct.parse_header(this);
 	}
 
 
@@ -117,37 +118,29 @@ public class UncompressInputStream extends FilterInputStream {
 
 	// string table stuff
 	private static final int TBL_CLEAR = 0x100;
-	private static final int TBL_FIRST = TBL_CLEAR + 1;
+	static final int TBL_FIRST = TBL_CLEAR + 1;
 
-	private int[] tab_prefix;
-	private byte[] tab_suffix;
+	int[] tab_prefix;
+	byte[] tab_suffix;
 	final private int[] zeros = new int[256];
-	private byte[] stack;
+	byte[] stack;
 
 	// various state
-	private boolean block_mode;
-	private int n_bits;
-	private int maxbits;
-	private int maxmaxcode;
-	private int maxcode;
-	private int bitmask;
-	private int oldcode;
-	private byte finchar;
-	private int stackp;
-	private int free_ent;
+	boolean block_mode;
+	int n_bits;
+	int maxbits;
+	int maxmaxcode;
+	int maxcode;
+	int bitmask;
+	int oldcode;
+	byte finchar;
+	int stackp;
+	int free_ent;
 
-	/* input buffer
-		The input stream must be considered in chunks
-		Each chunk is of length eight times the current code length.
-		Thus the chunk contains eight codes; NOT on byte boundaries.
-	*/
-	final private byte[] data = new byte[10000];
 	private int
-	    bit_pos = 0,  // current bitwise location in bitstream
-	    end = 0,      // index of next byte to fill in data
-	    got = 0;      // number of bytes gotten by most recent read()
+	    bit_pos = 0;      // number of bytes gotten by most recent read()
 	private boolean eof = false;
-	private static final int EXTRA = 64;
+	public static final int EXTRA = 64;
 
 
 	@Override
@@ -170,7 +163,7 @@ public class UncompressInputStream extends FilterInputStream {
 		byte l_finchar = finchar;
 		int l_stackp = stackp;
 		int l_free_ent = free_ent;
-		byte[] l_data = data;
+		byte[] l_data = uncompressInputStreamProduct.getData();
 		int l_bit_pos = bit_pos;
 
 		// empty stack if stuff still left
@@ -190,11 +183,11 @@ public class UncompressInputStream extends FilterInputStream {
 
 		// loop, filling local buffer until enough data has been decompressed
 		main_loop: do {
-			if (end < EXTRA) fill();
+			uncompressInputStreamProduct.extraFill();
 
-			int bit_end = (got > 0)
-			    ?  (end - end % l_n_bits) << 3  	// set to a "chunk" boundary
-			    :  (end << 3) - (l_n_bits - 1);  	// no more data, set to last code
+			int bit_end = (uncompressInputStreamProduct.getGot() > 0)
+			    ?  (uncompressInputStreamProduct.getEnd() - uncompressInputStreamProduct.getEnd() % l_n_bits) << 3  	// set to a "chunk" boundary
+			    :  (uncompressInputStreamProduct.getEnd() << 3) - (l_n_bits - 1);  	// no more data, set to last code
 
 			while (l_bit_pos < bit_end) {		// handle 1-byte reads correctly
 				if (len == 0) {
@@ -225,7 +218,7 @@ public class UncompressInputStream extends FilterInputStream {
 					logger.debug("Code-width expanded to ", l_n_bits);
 
 					l_bitmask = (1 << l_n_bits) - 1;
-					l_bit_pos = resetbuf(l_bit_pos);
+					l_bit_pos = uncompressInputStreamProduct.resetbuf(l_bit_pos);
 					continue main_loop;
 				}
 
@@ -267,7 +260,7 @@ public class UncompressInputStream extends FilterInputStream {
 
 					logger.debug("Code tables reset");
 
-					l_bit_pos = resetbuf(l_bit_pos);
+					l_bit_pos = uncompressInputStreamProduct.resetbuf(l_bit_pos);
 					continue main_loop;
 				}
 
@@ -313,11 +306,7 @@ public class UncompressInputStream extends FilterInputStream {
 
 				// generate new entry in table
 
-				if (l_free_ent < l_maxmaxcode) {
-					l_tab_prefix[l_free_ent] = l_oldcode;
-					l_tab_suffix[l_free_ent] = l_finchar;
-					l_free_ent++;
-				}
+				l_free_ent = uncompressInputStreamProduct.newEntryTable(l_tab_prefix, l_tab_suffix, l_maxmaxcode, l_oldcode, l_finchar, l_free_ent);
 
 
 				// Remember previous code
@@ -341,11 +330,11 @@ public class UncompressInputStream extends FilterInputStream {
 				}
 			}
 
-			l_bit_pos = resetbuf(l_bit_pos);
+			l_bit_pos = uncompressInputStreamProduct.resetbuf(l_bit_pos);
 		} while
+			(uncompressInputStreamProduct.getGot() > 0 || l_bit_pos < (uncompressInputStreamProduct.getEnd() << 3) - (l_n_bits - 1));
 	   		// old code: (got>0)  fails if code width expands near EOF
-	   		(got > 0	    // usually true
-			|| l_bit_pos < (end << 3) - (l_n_bits - 1));  // last few bytes
+	   		  // last few bytes
 
 		n_bits = l_n_bits;
 		maxcode = l_maxcode;
@@ -358,24 +347,6 @@ public class UncompressInputStream extends FilterInputStream {
 
 		eof = true;
 		return off - start;
-	}
-
-
-	/**
-	 * Moves the unread data in the buffer to the beginning and resets
-	 * the pointers.
-	 */
-	private int resetbuf(int bit_pos) {
-		int pos = bit_pos >> 3;
-		System.arraycopy(data, pos, data, 0, end - pos);
-		end -= pos;
-		return 0;
-	}
-
-
-	private void fill() throws IOException {
-		got = in.read(data, end, data.length - 1 - end);
-		if (got > 0) end += got;
 	}
 
 
@@ -398,64 +369,12 @@ public class UncompressInputStream extends FilterInputStream {
 
 
 	static final int LZW_MAGIC = 0x1f9d;
-	private static final int MAX_BITS = 16;
-	private static final int INIT_BITS = 9;
-	private static final int HDR_MAXBITS = 0x1f;
-	private static final int HDR_EXTENDED = 0x20;
-	private static final int HDR_FREE = 0x40;
-	private static final int HDR_BLOCK_MODE = 0x80;
-
-	private void parse_header() throws IOException {
-		// read in and check magic number
-		int t = in.read();
-		if (t < 0) throw new EOFException("Failed to read magic number");
-		int magic = (t & 0xff) << 8;
-		t = in.read();
-		if (t < 0) throw new EOFException("Failed to read magic number");
-		magic += t & 0xff;
-		if (magic != LZW_MAGIC)
-			throw new IOException("Input not in compress format (read " +
-					"magic number 0x" +
-					Integer.toHexString(magic) + ")");
-
-		// read in header byte
-		int header = in.read();
-		if (header < 0) throw new EOFException("Failed to read header");
-
-		block_mode = (header & HDR_BLOCK_MODE) > 0;
-		maxbits = header & HDR_MAXBITS;
-
-		if (maxbits > MAX_BITS)
-			throw new IOException("Stream compressed with " + maxbits +
-					" bits, but can only handle " + MAX_BITS +
-					" bits");
-
-		if ((header & HDR_EXTENDED) > 0)
-			throw new IOException("Header extension bit set");
-
-		if ((header & HDR_FREE) > 0)
-			throw new IOException("Header bit 6 set");
-
-		logger.debug("block mode: {}", block_mode);
-		logger.debug("max bits:   {}", maxbits);
-
-		// initialize stuff
-		maxmaxcode = 1 << maxbits;
-		n_bits = INIT_BITS;
-		maxcode = (1 << n_bits) - 1;
-		bitmask = maxcode;
-		oldcode = -1;
-		finchar = 0;
-		free_ent = block_mode ? TBL_FIRST : 256;
-
-		tab_prefix = new int[1 << maxbits];
-		tab_suffix = new byte[1 << maxbits];
-		stack = new byte[1 << maxbits];
-		stackp = stack.length;
-
-		for (int idx = 255; idx >= 0; idx--)
-			tab_suffix[idx] = (byte) idx;
-	}
+	static final int MAX_BITS = 16;
+	static final int INIT_BITS = 9;
+	static final int HDR_MAXBITS = 0x1f;
+	static final int HDR_EXTENDED = 0x20;
+	static final int HDR_FREE = 0x40;
+	static final int HDR_BLOCK_MODE = 0x80;
 
 	/**
 	 * This stream does not support mark/reset on the stream.
