@@ -23,7 +23,7 @@
 
 package org.biojava.nbio.core.alignment;
 
-import org.biojava.nbio.core.alignment.matrices.SubstitutionMatrixHelper;
+import org.biojava.nbio.core.alignment.matrices.SimpleSubstitutionMatrix;
 import org.biojava.nbio.core.alignment.template.AlignedSequence;
 import org.biojava.nbio.core.alignment.template.AlignedSequence.Step;
 import org.biojava.nbio.core.alignment.template.Profile;
@@ -38,6 +38,8 @@ import org.biojava.nbio.core.sequence.template.Compound;
 import org.biojava.nbio.core.sequence.template.CompoundSet;
 import org.biojava.nbio.core.sequence.template.Sequence;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.*;
 
@@ -58,6 +60,9 @@ public class SimpleProfile<S extends Sequence<C>, C extends Compound> implements
 	private List<AlignedSequence<S, C>> list;
 	private List<S> originals;
 	private int length;
+
+	private static Map<String, SubstitutionMatrix<AminoAcidCompound>> aminoAcidMatrices =
+			new HashMap<String, SubstitutionMatrix<AminoAcidCompound>>();
 
 	/**
 	 * Creates a pair profile for the given already aligned sequences.
@@ -588,8 +593,38 @@ public class SimpleProfile<S extends Sequence<C>, C extends Compound> implements
 		s.append(String.format("%n"));
 	}
 
-	protected static final SubstitutionMatrix<AminoAcidCompound> matrix = SubstitutionMatrixHelper.getBlosum65();
+	protected static final SubstitutionMatrix<AminoAcidCompound> matrix = getBlosum65();
 
+	public static SubstitutionMatrix<AminoAcidCompound> getBlosum65() {
+		return getAminoAcidMatrix("blosum65");
+	}
+
+
+	// reads in an amino acid substitution matrix, if necessary
+	private static SubstitutionMatrix<AminoAcidCompound> getAminoAcidMatrix(String file) {
+		if (!aminoAcidMatrices.containsKey(file)) {
+			InputStreamReader reader = getReader(file);
+			if (reader == null) {
+				return null;
+			}
+			aminoAcidMatrices.put(file, new SimpleSubstitutionMatrix<AminoAcidCompound>(
+					AminoAcidCompoundSet.getAminoAcidCompoundSet(), reader , file));
+		}
+		return aminoAcidMatrices.get(file);
+	}
+
+
+	// reads in a substitution matrix from a resource file
+	private static InputStreamReader getReader(String file) {
+		String resourcePathPrefix = "matrices/";
+		InputStream is = SimpleProfile.class.getResourceAsStream(String.format("/%s.txt",
+		resourcePathPrefix+file));
+		if (is == null) {
+			return null;
+		}
+		return new InputStreamReader(is);
+	}
+	
 	private boolean isSimilar(char c1, char c2) {
 		AminoAcidCompoundSet set = AminoAcidCompoundSet.getAminoAcidCompoundSet();
 

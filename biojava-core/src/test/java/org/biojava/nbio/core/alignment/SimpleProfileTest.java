@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class SimpleProfileTest {
 
@@ -445,6 +446,10 @@ public class SimpleProfileTest {
 		assertFalse(local.isCircular());
 		assertFalse(single.isCircular());
 	}
+    @Test
+    public void getBlosum65() {
+        assertNotNull(SimpleProfile.getBlosum65());
+    }
 
 	@Test
 	public void testToStringInt() {
