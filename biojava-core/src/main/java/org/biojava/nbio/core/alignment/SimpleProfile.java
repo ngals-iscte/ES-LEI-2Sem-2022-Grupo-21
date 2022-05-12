@@ -414,7 +414,6 @@ public class SimpleProfile<S extends Sequence<C>, C extends Compound> implements
 	private String toString(int width, String header, String idFormat, boolean seqIndexPre, boolean seqIndexPost,
 			boolean interlaced, boolean aligIndices, boolean aligConservation, boolean webDisplay) {
 
-		// TODO handle circular alignments
 		StringBuilder s = (header == null) ? new StringBuilder() : new StringBuilder(header);
 
 		if ( webDisplay && list.size() == 2){
@@ -465,28 +464,33 @@ public class SimpleProfile<S extends Sequence<C>, C extends Compound> implements
 
 			}
 		} else {
-			for (AlignedSequence<S, C> as : list) {
-				if (idFormat != null) {
-					s.append(String.format(idFormat, as.getAccession()));
-				}
-				for (int i = 0; i < getLength(); i += width) {
-					int start = i + 1, end = Math.min(getLength(), i + width);
-					if (seqIndexPre) {
-						s.append(String.format(seqIndexFormatPre, as.getSequenceIndexAt(start)));
-					}
-					s.append(as.getSubSequence(start, end).getSequenceAsString());
-					if (seqIndexPost) {
-						s.append(String.format(seqIndexFormatPost, as.getSequenceIndexAt(end)));
-					}
-					s.append(String.format("%n"));
-				}
-			}
+			handleList(width, idFormat, seqIndexPre, seqIndexPost, s, seqIndexFormatPre, seqIndexFormatPost);
 		}
 
 		if (webDisplay && aligConservation && list.size() == 2) {
 			s.append(IOUtils.getPDBLegend());
 		}
 		return s.toString();
+	}
+
+	private void handleList(int width, String idFormat, boolean seqIndexPre, boolean seqIndexPost, StringBuilder s,
+			String seqIndexFormatPre, String seqIndexFormatPost) {
+		for (AlignedSequence<S, C> as : list) {
+			if (idFormat != null) {
+				s.append(String.format(idFormat, as.getAccession()));
+			}
+			for (int i = 0; i < getLength(); i += width) {
+				int start = i + 1, end = Math.min(getLength(), i + width);
+				if (seqIndexPre) {
+					s.append(String.format(seqIndexFormatPre, as.getSequenceIndexAt(start)));
+				}
+				s.append(as.getSubSequence(start, end).getSequenceAsString());
+				if (seqIndexPost) {
+					s.append(String.format(seqIndexFormatPost, as.getSequenceIndexAt(end)));
+				}
+				s.append(String.format("%n"));
+			}
+		}
 	}
 
 	private String checkAligIndices(int width, String idFormat, boolean seqIndexPre, boolean aligIndices,
