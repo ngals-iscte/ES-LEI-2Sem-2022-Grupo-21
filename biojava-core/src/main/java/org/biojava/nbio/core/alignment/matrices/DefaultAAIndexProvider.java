@@ -20,6 +20,7 @@
  */
 package org.biojava.nbio.core.alignment.matrices;
 
+import org.biojava.nbio.core.alignment.SimpleProfile;
 import org.biojava.nbio.core.alignment.template.SubstitutionMatrix;
 import org.biojava.nbio.core.sequence.compound.AminoAcidCompound;
 import org.slf4j.Logger;
@@ -60,7 +61,7 @@ public class DefaultAAIndexProvider implements AAIndexProvider {
 	}
 
 	public InputStream getInputStreamToAAindexFile(){
-		 return SubstitutionMatrixHelper.class.getResourceAsStream(String.format("/matrices/AAINDEX.txt"));
+		 return SimpleProfile.class.getResourceAsStream(String.format("/matrices/AAINDEX.txt"));
 	}
 
 }
