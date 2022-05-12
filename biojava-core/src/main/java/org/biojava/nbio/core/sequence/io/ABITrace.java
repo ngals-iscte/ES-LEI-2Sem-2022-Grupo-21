@@ -389,28 +389,7 @@ public class ABITrace {
 			order[i] = (char) traceData[FWO + i];
 		}
 
-		for (int i = 0; i <= 3; i++) {
-			switch (order[i]) {
-				case 'A':
-				case 'a':
-					pointers[0] = datas[i];
-					break;
-				case 'C':
-				case 'c':
-					pointers[1] = datas[i];
-					break;
-				case 'G':
-				case 'g':
-					pointers[2] = datas[i];
-					break;
-				case 'T':
-				case 't':
-					pointers[3] = datas[i];
-					break;
-				default:
-					throw new IllegalArgumentException("Trace contains illegal values.");
-			}
-		}
+		verifyOrder(pointers, datas, order);
 
 		A = new int[traceLength];
 		C = new int[traceLength];
@@ -434,6 +413,31 @@ public class ABITrace {
 			}
 		}
 		return;
+	}
+
+	private void verifyOrder(int[] pointers, int[] datas, char[] order) {
+		for (int i = 0; i <= 3; i++) {
+			switch (order[i]) {
+				case 'A':
+				case 'a':
+					pointers[0] = datas[i];
+					break;
+				case 'C':
+				case 'c':
+					pointers[1] = datas[i];
+					break;
+				case 'G':
+				case 'g':
+					pointers[2] = datas[i];
+					break;
+				case 'T':
+				case 't':
+					pointers[3] = datas[i];
+					break;
+				default:
+					throw new IllegalArgumentException("Trace contains illegal values.");
+			}
+		}
 	}
 
 	/**
