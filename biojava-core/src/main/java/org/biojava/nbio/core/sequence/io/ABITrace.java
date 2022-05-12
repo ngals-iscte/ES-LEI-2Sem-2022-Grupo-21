@@ -231,26 +231,7 @@ public class ABITrace {
 		int basenum = 0;
 		for (int q = 1; q <= 5; q++) {
 			for (int x = 0; x <= traceLength - 2; x++) {
-				if (q == 1) {
-					g.setColor(acolor);
-					g.drawLine(widthScale * x, transmute(A[x], imageHeight, scale),
-							widthScale * (x + 1), transmute(A[x + 1], imageHeight, scale));
-				}
-				if (q == 2) {
-					g.setColor(ccolor);
-					g.drawLine(widthScale * x, transmute(C[x], imageHeight, scale),
-							widthScale * (x + 1), transmute(C[x + 1], imageHeight, scale));
-				}
-				if (q == 3) {
-					g.setColor(tcolor);
-					g.drawLine(widthScale * x, transmute(T[x], imageHeight, scale),
-							widthScale * (x + 1), transmute(T[x + 1], imageHeight, scale));
-				}
-				if (q == 4) {
-					g.setColor(gcolor);
-					g.drawLine(widthScale * x, transmute(G[x], imageHeight, scale),
-							widthScale * (x + 1), transmute(G[x + 1], imageHeight, scale));
-				}
+				recolorAndDraw(imageHeight, widthScale, g, acolor, ccolor, gcolor, tcolor, scale, q, x);
 				if (q == 5) {
 					if ((here > bc.length - 1) || (basenum > seq.length - 1)) break;
 					if (bc[here] == x) {
@@ -264,26 +245,7 @@ public class ABITrace {
 							g.drawString(Integer.toString(basenum + 1),
 									widthScale * x - 3, transmute(-36, imageHeight, 1.0));
 						}
-						switch (seq[basenum]) {
-							case 'A':
-							case 'a':
-								g.setColor(acolor);
-								break;
-							case 'C':
-							case 'c':
-								g.setColor(ccolor);
-								break;
-							case 'G':
-							case 'g':
-								g.setColor(gcolor);
-								break;
-							case 'T':
-							case 't':
-								g.setColor(tcolor);
-								break;
-							default:
-								g.setColor(ncolor);
-						}
+						checkSeq(g, acolor, ccolor, gcolor, tcolor, ncolor, seq, basenum);
 						g.drawChars(seq, basenum, 1,
 								widthScale * x - 3, transmute(-18, imageHeight, 1.0));
 						g.setColor(Color.black);
@@ -294,6 +256,54 @@ public class ABITrace {
 			}
 		}
 		return out;
+	}
+
+	private void recolorAndDraw(int imageHeight, int widthScale, Graphics2D g, Color acolor, Color ccolor, Color gcolor,
+			Color tcolor, double scale, int q, int x) {
+		if (q == 1) {
+			g.setColor(acolor);
+			g.drawLine(widthScale * x, transmute(A[x], imageHeight, scale),
+					widthScale * (x + 1), transmute(A[x + 1], imageHeight, scale));
+		}
+		if (q == 2) {
+			g.setColor(ccolor);
+			g.drawLine(widthScale * x, transmute(C[x], imageHeight, scale),
+					widthScale * (x + 1), transmute(C[x + 1], imageHeight, scale));
+		}
+		if (q == 3) {
+			g.setColor(tcolor);
+			g.drawLine(widthScale * x, transmute(T[x], imageHeight, scale),
+					widthScale * (x + 1), transmute(T[x + 1], imageHeight, scale));
+		}
+		if (q == 4) {
+			g.setColor(gcolor);
+			g.drawLine(widthScale * x, transmute(G[x], imageHeight, scale),
+					widthScale * (x + 1), transmute(G[x + 1], imageHeight, scale));
+		}
+	}
+
+	private void checkSeq(Graphics2D g, Color acolor, Color ccolor, Color gcolor, Color tcolor, Color ncolor,
+			char[] seq, int basenum) {
+		switch (seq[basenum]) {
+			case 'A':
+			case 'a':
+				g.setColor(acolor);
+				break;
+			case 'C':
+			case 'c':
+				g.setColor(ccolor);
+				break;
+			case 'G':
+			case 'g':
+				g.setColor(gcolor);
+				break;
+			case 'T':
+			case 't':
+				g.setColor(tcolor);
+				break;
+			default:
+				g.setColor(ncolor);
+		}
 	}
 
 	/**
@@ -379,28 +389,7 @@ public class ABITrace {
 			order[i] = (char) traceData[FWO + i];
 		}
 
-		for (int i = 0; i <= 3; i++) {
-			switch (order[i]) {
-				case 'A':
-				case 'a':
-					pointers[0] = datas[i];
-					break;
-				case 'C':
-				case 'c':
-					pointers[1] = datas[i];
-					break;
-				case 'G':
-				case 'g':
-					pointers[2] = datas[i];
-					break;
-				case 'T':
-				case 't':
-					pointers[3] = datas[i];
-					break;
-				default:
-					throw new IllegalArgumentException("Trace contains illegal values.");
-			}
-		}
+		verifyOrder(pointers, datas, order);
 
 		A = new int[traceLength];
 		C = new int[traceLength];
@@ -424,6 +413,31 @@ public class ABITrace {
 			}
 		}
 		return;
+	}
+
+	private void verifyOrder(int[] pointers, int[] datas, char[] order) {
+		for (int i = 0; i <= 3; i++) {
+			switch (order[i]) {
+				case 'A':
+				case 'a':
+					pointers[0] = datas[i];
+					break;
+				case 'C':
+				case 'c':
+					pointers[1] = datas[i];
+					break;
+				case 'G':
+				case 'g':
+					pointers[2] = datas[i];
+					break;
+				case 'T':
+				case 't':
+					pointers[3] = datas[i];
+					break;
+				default:
+					throw new IllegalArgumentException("Trace contains illegal values.");
+			}
+		}
 	}
 
 	/**
@@ -494,17 +508,7 @@ public class ABITrace {
 			RecName = new String(RecNameArray);
 			if (RecName.equals("FWO_"))
 				FWO = indexBase + (record * 28) + 20;
-			if (RecName.equals("DATA")) {
-				++DataCounter;
-				if (DataCounter == 9)
-					DATA9 = indexBase + (record * 28) + 20;
-				if (DataCounter == 10)
-					DATA10 = indexBase + (record * 28) + 20;
-				if (DataCounter == 11)
-					DATA11 = indexBase + (record * 28) + 20;
-				if (DataCounter == 12)
-					DATA12 = indexBase + (record * 28) + 20;
-			}
+			DataCounter = parseData(DataCounter, indexBase, RecName, record);
 			if (RecName.equals("PBAS")) {
 				++PBASCounter;
 				if (PBASCounter == 2)
@@ -531,6 +535,21 @@ public class ABITrace {
 		DATA12 = getIntAt(DATA12) + macJunk;
 		PBAS2 = getIntAt(PBAS2) + macJunk;
 		PCON = getIntAt(PCON) + macJunk;
+	}
+
+	private int parseData(int DataCounter, int indexBase, String RecName, int record) {
+		if (RecName.equals("DATA")) {
+			++DataCounter;
+			if (DataCounter == 9)
+				DATA9 = indexBase + (record * 28) + 20;
+			if (DataCounter == 10)
+				DATA10 = indexBase + (record * 28) + 20;
+			if (DataCounter == 11)
+				DATA11 = indexBase + (record * 28) + 20;
+			if (DataCounter == 12)
+				DATA12 = indexBase + (record * 28) + 20;
+		}
+		return DataCounter;
 	}
 
 	/**
