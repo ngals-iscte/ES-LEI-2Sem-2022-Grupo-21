@@ -63,16 +63,6 @@ public class SubstitutionMatrixHelper implements Serializable {
 		return getAminoAcidMatrix("blosum65");
 	}
 
-
-	/**
-	 * Returns Nuc 4.2 matrix by Lowe
-	 * Only the first nucleotide sequence to align can contain ambiguous nucleotides
-	 * @return Nuc 4.2 matrix
-	 */
-	public static SubstitutionMatrix<NucleotideCompound> getNuc4_2() {
-		return getNucleotideMatrix("nuc-4_2");
-	}
-
 	/**
 	 * Returns Nuc 4.4 matrix by Lowe
 	 * Both of the nucleotide sequences to align can contain ambiguous nucleotides
