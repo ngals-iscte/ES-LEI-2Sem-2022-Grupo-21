@@ -264,26 +264,7 @@ public class ABITrace {
 							g.drawString(Integer.toString(basenum + 1),
 									widthScale * x - 3, transmute(-36, imageHeight, 1.0));
 						}
-						switch (seq[basenum]) {
-							case 'A':
-							case 'a':
-								g.setColor(acolor);
-								break;
-							case 'C':
-							case 'c':
-								g.setColor(ccolor);
-								break;
-							case 'G':
-							case 'g':
-								g.setColor(gcolor);
-								break;
-							case 'T':
-							case 't':
-								g.setColor(tcolor);
-								break;
-							default:
-								g.setColor(ncolor);
-						}
+						checkSeq(g, acolor, ccolor, gcolor, tcolor, ncolor, seq, basenum);
 						g.drawChars(seq, basenum, 1,
 								widthScale * x - 3, transmute(-18, imageHeight, 1.0));
 						g.setColor(Color.black);
@@ -294,6 +275,30 @@ public class ABITrace {
 			}
 		}
 		return out;
+	}
+
+	private void checkSeq(Graphics2D g, Color acolor, Color ccolor, Color gcolor, Color tcolor, Color ncolor,
+			char[] seq, int basenum) {
+		switch (seq[basenum]) {
+			case 'A':
+			case 'a':
+				g.setColor(acolor);
+				break;
+			case 'C':
+			case 'c':
+				g.setColor(ccolor);
+				break;
+			case 'G':
+			case 'g':
+				g.setColor(gcolor);
+				break;
+			case 'T':
+			case 't':
+				g.setColor(tcolor);
+				break;
+			default:
+				g.setColor(ncolor);
+		}
 	}
 
 	/**
