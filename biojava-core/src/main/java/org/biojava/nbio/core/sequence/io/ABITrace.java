@@ -508,17 +508,7 @@ public class ABITrace {
 			RecName = new String(RecNameArray);
 			if (RecName.equals("FWO_"))
 				FWO = indexBase + (record * 28) + 20;
-			if (RecName.equals("DATA")) {
-				++DataCounter;
-				if (DataCounter == 9)
-					DATA9 = indexBase + (record * 28) + 20;
-				if (DataCounter == 10)
-					DATA10 = indexBase + (record * 28) + 20;
-				if (DataCounter == 11)
-					DATA11 = indexBase + (record * 28) + 20;
-				if (DataCounter == 12)
-					DATA12 = indexBase + (record * 28) + 20;
-			}
+			DataCounter = parseData(DataCounter, indexBase, RecName, record);
 			if (RecName.equals("PBAS")) {
 				++PBASCounter;
 				if (PBASCounter == 2)
@@ -545,6 +535,21 @@ public class ABITrace {
 		DATA12 = getIntAt(DATA12) + macJunk;
 		PBAS2 = getIntAt(PBAS2) + macJunk;
 		PCON = getIntAt(PCON) + macJunk;
+	}
+
+	private int parseData(int DataCounter, int indexBase, String RecName, int record) {
+		if (RecName.equals("DATA")) {
+			++DataCounter;
+			if (DataCounter == 9)
+				DATA9 = indexBase + (record * 28) + 20;
+			if (DataCounter == 10)
+				DATA10 = indexBase + (record * 28) + 20;
+			if (DataCounter == 11)
+				DATA11 = indexBase + (record * 28) + 20;
+			if (DataCounter == 12)
+				DATA12 = indexBase + (record * 28) + 20;
+		}
+		return DataCounter;
 	}
 
 	/**
