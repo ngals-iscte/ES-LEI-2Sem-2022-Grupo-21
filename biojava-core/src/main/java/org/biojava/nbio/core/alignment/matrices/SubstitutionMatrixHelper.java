@@ -64,15 +64,6 @@ public class SubstitutionMatrixHelper implements Serializable {
 	}
 
 	/**
-	 * Returns Nuc 4.4 matrix by Lowe
-	 * Both of the nucleotide sequences to align can contain ambiguous nucleotides
-	 * @return Nuc 4.4 matrix
-	 */
-	public static SubstitutionMatrix<NucleotideCompound> getNuc4_4() {
-		return getNucleotideMatrix("nuc-4_4");
-	}
-
-	/**
 	 * Returns PAM 250 matrix by Dayhoff
 	 * @return PAM 250 matrix
 	 */
