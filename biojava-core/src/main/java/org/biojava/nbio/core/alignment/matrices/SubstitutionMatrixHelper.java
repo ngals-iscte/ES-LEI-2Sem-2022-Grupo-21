@@ -63,13 +63,6 @@ public class SubstitutionMatrixHelper implements Serializable {
 		return getAminoAcidMatrix("blosum65");
 	}
 
-	/**
-	 * Returns PAM 250 matrix by Dayhoff
-	 * @return PAM 250 matrix
-	 */
-	public static SubstitutionMatrix<AminoAcidCompound> getPAM250() {
-		return getAminoAcidMatrix("pam250");
-	}
 
 	// helper methods
 
