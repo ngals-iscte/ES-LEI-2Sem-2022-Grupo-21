@@ -55,15 +55,6 @@ public class SubstitutionMatrixHelper implements Serializable {
 			new HashMap<String, SubstitutionMatrix<NucleotideCompound>>();
 
 
-
-	/**
-	 * Returns Blosum 35 matrix by Henikoff & Henikoff
-	 * @return Blosum 35 matrix
-	 */
-	public static SubstitutionMatrix<AminoAcidCompound> getBlosum35() {
-		return getAminoAcidMatrix("blosum35");
-	}
-
 	/**
 	 * Returns Blosum 40 matrix by Henikoff & Henikoff
 	 * @return Blosum 40 matrix
