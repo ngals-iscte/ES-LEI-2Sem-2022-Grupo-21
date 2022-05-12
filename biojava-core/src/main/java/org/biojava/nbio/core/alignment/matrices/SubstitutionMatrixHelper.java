@@ -64,28 +64,6 @@ public class SubstitutionMatrixHelper implements Serializable {
 	}
 
 
-	// helper methods
-
-	/**
-	 * Returns a substitution matrix for {@link AminoAcidCompound amino acids} given by the name {@code name}.
-	 * Searches first in the default AAINDEX file (see @link {@link #getMatrixFromAAINDEX(String)}), then in the classpath
-	 * in src/main/resources/matrices.
-	 * Example names:
-	 * <ul>
-	 * <li>blosum62</li>
-	 * <li>JOND920103</li>
-	 * <li>pam250</li>
-	 * <li>gonnet250</li>
-	 * </ul>
-	 * @param name Either a common name or an AAINDEX name
-	 * @return a {@code} SubstitutionMatrix {@code} or {@code}null{@code} if no matrix is found
-	 */
-	public static SubstitutionMatrix<AminoAcidCompound> getAminoAcidSubstitutionMatrix(String name) {
-		SubstitutionMatrix<AminoAcidCompound> matrix = getMatrixFromAAINDEX(name);
-		if (matrix != null) return matrix;
-		return getAminoAcidMatrix(name);
-	}
-
 	// reads in an amino acid substitution matrix, if necessary
 	private static SubstitutionMatrix<AminoAcidCompound> getAminoAcidMatrix(String file) {
 		if (!aminoAcidMatrices.containsKey(file)) {
