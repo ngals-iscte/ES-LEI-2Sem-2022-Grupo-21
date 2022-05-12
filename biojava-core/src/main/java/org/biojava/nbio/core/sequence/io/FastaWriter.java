@@ -28,8 +28,6 @@ import java.util.Collection;
 import org.biojava.nbio.core.sequence.io.template.FastaHeaderFormatInterface;
 import org.biojava.nbio.core.sequence.template.Compound;
 import org.biojava.nbio.core.sequence.template.Sequence;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The FastaWriter writes a collection of sequences to an outputStream. FastaWriterHelper should be
@@ -40,8 +38,6 @@ import org.slf4j.LoggerFactory;
  * @author Scooter Willis <willishf at gmail dot com>
  */
 public class FastaWriter<S extends Sequence<?>, C extends Compound> {
-
-	private final static Logger logger = LoggerFactory.getLogger(FastaWriter.class);
 
 	OutputStream os;
 	Collection<S> sequences;
