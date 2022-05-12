@@ -414,13 +414,8 @@ public class SimpleProfile<S extends Sequence<C>, C extends Compound> implements
 	private String toString(int width, String header, String idFormat, boolean seqIndexPre, boolean seqIndexPost,
 			boolean interlaced, boolean aligIndices, boolean aligConservation, boolean webDisplay) {
 
-		// TODO handle circular alignments
 		StringBuilder s = (header == null) ? new StringBuilder() : new StringBuilder(header);
-
-		if ( webDisplay && list.size() == 2){
-			s.append("<div><pre>");
-		}
-
+		appendString(webDisplay, s);
 		width = Math.max(1, width);
 		int seqIndexPad = (int) (Math.floor(Math.log10(getLength())) + 2);
 		String seqIndexFormatPre = "%" + seqIndexPad + "d ", seqIndexFormatPost = "%" + seqIndexPad + "d";
@@ -432,73 +427,104 @@ public class SimpleProfile<S extends Sequence<C>, C extends Compound> implements
 				if (i > 0) {
 					s.append(String.format("%n"));
 				}
-				if (aligIndices) {
-					if (end < i + width) {
-						int line = end - start + 1;
-						aligIndFormat = "%-" + Math.max(1, line / 2) + "d %" + Math.max(1, line - (line / 2) - 1) +
-						"d%n";
-					}
-					if (idFormat != null) {
-						s.append(String.format(idFormat, ""));
-					}
-					if (seqIndexPre) {
-						s.append(String.format("%" + (seqIndexPad + 1) + "s", ""));
-					}
-					s.append(String.format(aligIndFormat, start, end));
-				}
+				aligIndFormat = checkAligIndices(width, idFormat, seqIndexPre, aligIndices, s, seqIndexPad,
+						aligIndFormat, i, start, end);
 
 				int counter = 0;
-				for (AlignedSequence<S, C> as : list) {
-					counter++;
-
-					if ( webDisplay && list.size() == 2){
-						printSequenceAlignmentWeb(s, counter, idFormat, seqIndexPre, seqIndexFormatPre, seqIndexPost,
-								seqIndexFormatPost, start, end);
-					} else {
-						if (idFormat != null) {
-							s.append(String.format(idFormat, as.getAccession()));
-						}
-						if (seqIndexPre) {
-							s.append(String.format(seqIndexFormatPre, as.getSequenceIndexAt(start)));
-						}
-
-						s.append(as.getSubSequence(start, end).getSequenceAsString());
-
-						if (seqIndexPost) {
-							s.append(String.format(seqIndexFormatPost, as.getSequenceIndexAt(end)));
-						}
-						s.append(String.format("%n"));
-					}
-
-					if (aligConservation && list.size() == 2 && counter == 1) {
-						printConservation(s, idFormat, seqIndexPad, seqIndexPre, start, end, webDisplay);
-					}
-				}
+				alignedSequenceIterator(idFormat, seqIndexPre, seqIndexPost, aligConservation, webDisplay, s,
+						seqIndexPad, seqIndexFormatPre, seqIndexFormatPost, start, end, counter);
 
 			}
 		} else {
-			for (AlignedSequence<S, C> as : list) {
-				if (idFormat != null) {
-					s.append(String.format(idFormat, as.getAccession()));
-				}
-				for (int i = 0; i < getLength(); i += width) {
-					int start = i + 1, end = Math.min(getLength(), i + width);
-					if (seqIndexPre) {
-						s.append(String.format(seqIndexFormatPre, as.getSequenceIndexAt(start)));
-					}
-					s.append(as.getSubSequence(start, end).getSequenceAsString());
-					if (seqIndexPost) {
-						s.append(String.format(seqIndexFormatPost, as.getSequenceIndexAt(end)));
-					}
-					s.append(String.format("%n"));
-				}
-			}
+			handleList(width, idFormat, seqIndexPre, seqIndexPost, s, seqIndexFormatPre, seqIndexFormatPost);
 		}
 
 		if (webDisplay && aligConservation && list.size() == 2) {
 			s.append(IOUtils.getPDBLegend());
 		}
 		return s.toString();
+	}
+
+	private void alignedSequenceIterator(String idFormat, boolean seqIndexPre, boolean seqIndexPost,
+			boolean aligConservation, boolean webDisplay, StringBuilder s, int seqIndexPad, String seqIndexFormatPre,
+			String seqIndexFormatPost, int start, int end, int counter) {
+		for (AlignedSequence<S, C> as : list) {
+			counter++;
+
+			if ( webDisplay && list.size() == 2){
+				printSequenceAlignmentWeb(s, counter, idFormat, seqIndexPre, seqIndexFormatPre, seqIndexPost,
+						seqIndexFormatPost, start, end);
+			} else {
+				toStringHelper(idFormat, seqIndexPre, seqIndexPost, s, seqIndexFormatPre, seqIndexFormatPost,
+						start, end, as);
+			}
+
+			if (aligConservation && list.size() == 2 && counter == 1) {
+				printConservation(s, idFormat, seqIndexPad, seqIndexPre, start, end, webDisplay);
+			}
+		}
+	}
+
+	private void appendString(boolean webDisplay, StringBuilder s) {
+		if ( webDisplay && list.size() == 2){
+			s.append("<div><pre>");
+		}
+	}
+
+	private void toStringHelper(String idFormat, boolean seqIndexPre, boolean seqIndexPost, StringBuilder s,
+			String seqIndexFormatPre, String seqIndexFormatPost, int start, int end, AlignedSequence<S, C> as) {
+		if (idFormat != null) {
+			s.append(String.format(idFormat, as.getAccession()));
+		}
+		if (seqIndexPre) {
+			s.append(String.format(seqIndexFormatPre, as.getSequenceIndexAt(start)));
+		}
+
+		s.append(as.getSubSequence(start, end).getSequenceAsString());
+
+		if (seqIndexPost) {
+			s.append(String.format(seqIndexFormatPost, as.getSequenceIndexAt(end)));
+		}
+		s.append(String.format("%n"));
+	}
+
+	private void handleList(int width, String idFormat, boolean seqIndexPre, boolean seqIndexPost, StringBuilder s,
+			String seqIndexFormatPre, String seqIndexFormatPost) {
+		for (AlignedSequence<S, C> as : list) {
+			if (idFormat != null) {
+				s.append(String.format(idFormat, as.getAccession()));
+			}
+			for (int i = 0; i < getLength(); i += width) {
+				int start = i + 1, end = Math.min(getLength(), i + width);
+				if (seqIndexPre) {
+					s.append(String.format(seqIndexFormatPre, as.getSequenceIndexAt(start)));
+				}
+				s.append(as.getSubSequence(start, end).getSequenceAsString());
+				if (seqIndexPost) {
+					s.append(String.format(seqIndexFormatPost, as.getSequenceIndexAt(end)));
+				}
+				s.append(String.format("%n"));
+			}
+		}
+	}
+
+	private String checkAligIndices(int width, String idFormat, boolean seqIndexPre, boolean aligIndices,
+			StringBuilder s, int seqIndexPad, String aligIndFormat, int i, int start, int end) {
+		if (aligIndices) {
+			if (end < i + width) {
+				int line = end - start + 1;
+				aligIndFormat = "%-" + Math.max(1, line / 2) + "d %" + Math.max(1, line - (line / 2) - 1) +
+				"d%n";
+			}
+			if (idFormat != null) {
+				s.append(String.format(idFormat, ""));
+			}
+			if (seqIndexPre) {
+				s.append(String.format("%" + (seqIndexPad + 1) + "s", ""));
+			}
+			s.append(String.format(aligIndFormat, start, end));
+		}
+		return aligIndFormat;
 	}
 
 	private void printSequenceAlignmentWeb(StringBuilder s, int counter, String idFormat, boolean seqIndexPre,
