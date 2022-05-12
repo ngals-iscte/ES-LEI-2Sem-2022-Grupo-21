@@ -37,8 +37,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 /**
- * Use FastaReaderHelper as an example of how to use this class where FastaReaderHelper should be the
- * primary class used to read Fasta files
+ * Use FastaReaderHelper as an example of how to use this class where
+ * FastaReaderHelper should be the primary class used to read Fasta files
+ * 
  * @author Scooter Willis ;lt;willishf at gmail dot com&gt;
  */
 public class FastaReader<S extends Sequence<?>, C extends Compound> {
@@ -46,25 +47,28 @@ public class FastaReader<S extends Sequence<?>, C extends Compound> {
 	private final static Logger logger = LoggerFactory.getLogger(FastaReader.class);
 
 	SequenceCreatorInterface<C> sequenceCreator;
-	SequenceHeaderParserInterface<S,C> headerParser;
+	SequenceHeaderParserInterface<S, C> headerParser;
 	BufferedReaderBytesRead br;
 	InputStreamReader isr;
 	FileInputStream fi = null;
 	long fileIndex = 0;
 	long sequenceIndex = 0;
 	String line = "";
-	String header= "";
+	String header = "";
 
 	/**
-	 * If you are going to use FileProxyProteinSequenceCreator then do not use this constructor because we need details about
-	 * local file offsets for quick reads. InputStreams does not give you the name of the stream to access quickly via file seek. A seek in
-	 * an inputstream is forced to read all the data so you don't gain anything.
-	 * @param is inputStream
+	 * If you are going to use FileProxyProteinSequenceCreator then do not use this
+	 * constructor because we need details about local file offsets for quick reads.
+	 * InputStreams does not give you the name of the stream to access quickly via
+	 * file seek. A seek in an inputstream is forced to read all the data so you
+	 * don't gain anything.
+	 * 
+	 * @param is              inputStream
 	 * @param headerParser
 	 * @param sequenceCreator
 	 */
-	public FastaReader(InputStream is, SequenceHeaderParserInterface<S,C> headerParser,
-					   SequenceCreatorInterface<C> sequenceCreator) {
+	public FastaReader(InputStream is, SequenceHeaderParserInterface<S, C> headerParser,
+			SequenceCreatorInterface<C> sequenceCreator) {
 		this.headerParser = headerParser;
 		isr = new InputStreamReader(is);
 		this.br = new BufferedReaderBytesRead(isr);
@@ -72,20 +76,20 @@ public class FastaReader<S extends Sequence<?>, C extends Compound> {
 	}
 
 	/**
-	 * If you are going to use the FileProxyProteinSequenceCreator then you
-	 * need to use this constructor because we need details about
-	 * the location of the file.
+	 * If you are going to use the FileProxyProteinSequenceCreator then you need to
+	 * use this constructor because we need details about the location of the file.
+	 * 
 	 * @param file
 	 * @param headerParser
 	 * @param sequenceCreator
 	 * @throws FileNotFoundException if the file does not exist, is a directory
-	 * 	rather than a regular file, or for some other reason cannot be opened
-	 * 	for reading.
-	 * @throws SecurityException if a security manager exists and its checkRead
-	 * 	method denies read access to the file.
+	 *                               rather than a regular file, or for some other
+	 *                               reason cannot be opened for reading.
+	 * @throws SecurityException     if a security manager exists and its checkRead
+	 *                               method denies read access to the file.
 	 */
-	public FastaReader(File file, SequenceHeaderParserInterface<S,C> headerParser,
-					   SequenceCreatorInterface<C> sequenceCreator) throws FileNotFoundException {
+	public FastaReader(File file, SequenceHeaderParserInterface<S, C> headerParser,
+			SequenceCreatorInterface<C> sequenceCreator) throws FileNotFoundException {
 		this.headerParser = headerParser;
 		fi = new FileInputStream(file);
 		isr = new InputStreamReader(fi);
@@ -95,111 +99,89 @@ public class FastaReader<S extends Sequence<?>, C extends Compound> {
 
 	/**
 	 * The parsing is done in this method.<br>
-	 * This method tries to process all the available fasta records
-	 * in the File or InputStream, closes the underlying resource,
-	 * and return the results in {@link LinkedHashMap}.<br>
+	 * This method tries to process all the available fasta records in the File or
+	 * InputStream, closes the underlying resource, and return the results in
+	 * {@link LinkedHashMap}.<br>
 	 * You don't need to call {@link #close()} after calling this method.
+	 * 
 	 * @see #process(int)
-	 * @return {@link HashMap} containing all the parsed fasta records
-	 * present, starting current fileIndex onwards.
+	 * @return {@link HashMap} containing all the parsed fasta records present,
+	 *         starting current fileIndex onwards.
 	 * @throws IOException if an error occurs reading the input file
 	 */
-	public LinkedHashMap<String,S> process() throws IOException {
-		LinkedHashMap<String,S> sequences = process(-1);
+	public LinkedHashMap<String, S> process() throws IOException {
+		LinkedHashMap<String, S> sequences = process(-1);
 		close();
 
 		return sequences;
 	}
 
 	/**
-	 * This method tries to parse maximum <code>max</code> records from
-	 * the open File or InputStream, and leaves the underlying resource open.<br>
-	 * Subsequent calls to the same method continue parsing the rest of the file.<br>
-	 * This is particularly useful when dealing with very big data files,
-	 * (e.g. NCBI nr database), which can't fit into memory and will take long
-	 * time before the first result is available.<br>
+	 * This method tries to parse maximum <code>max</code> records from the open
+	 * File or InputStream, and leaves the underlying resource open.<br>
+	 * Subsequent calls to the same method continue parsing the rest of the
+	 * file.<br>
+	 * This is particularly useful when dealing with very big data files, (e.g. NCBI
+	 * nr database), which can't fit into memory and will take long time before the
+	 * first result is available.<br>
 	 * <b>N.B.</b>
 	 * <ul>
 	 * <li>This method can't be called after calling its NO-ARGUMENT twin.</li>
 	 * <li>remember to close the underlying resource when you are done.</li>
 	 * </ul>
+	 * 
 	 * @see #process()
 	 * @author Amr ALHOSSARY
 	 * @since 3.0.6
 	 * @param max maximum number of records to return, <code>-1</code> for infinity.
-	 * @return {@link HashMap} containing maximum <code>max</code> parsed fasta records
-	 * present, starting current fileIndex onwards.
+	 * @return {@link HashMap} containing maximum <code>max</code> parsed fasta
+	 *         records present, starting current fileIndex onwards.
 	 * @throws IOException if an error occurs reading the input file
 	 */
-	public LinkedHashMap<String,S> process(int max) throws IOException {
-
+	public LinkedHashMap<String, S> process(int max) throws IOException {
 
 		String line = "";
-		if(this.line != null && this.line.length() > 0){
-			line=this.line;
+		if (this.line != null && this.line.length() > 0) {
+			line = this.line;
 		}
 		String header = "";
-		if(this.header != null && this.header.length() > 0){
-			header=this.header;
+		if (this.header != null && this.header.length() > 0) {
+			header = this.header;
 		}
 
 		StringBuilder sb = new StringBuilder();
-		int processedSequences=0;
+		int processedSequences = 0;
 		boolean keepGoing = true;
 
-
-		LinkedHashMap<String,S> sequences = new LinkedHashMap<String,S>();
+		LinkedHashMap<String, S> sequences = new LinkedHashMap<String, S>();
 
 		do {
 			line = line.trim(); // nice to have but probably not needed
 			if (line.length() != 0) {
-				if (line.startsWith(">")) {//start of new fasta record
+				if (line.startsWith(">")) {// start of new fasta record
 
-					if (sb.length() > 0) {
-						//i.e. if there is already a sequence before
-						//logger.info("Sequence index=" + sequenceIndex);
-
-						try {
-							@SuppressWarnings("unchecked")
-							S sequence = (S)sequenceCreator.getSequence(sb.toString(), sequenceIndex);
-							headerParser.parseHeader(header, sequence);
-							sequences.put(sequence.getAccession().getID(),sequence);
-							processedSequences++;
-
-						} catch (CompoundNotFoundException e) {
-							logger.warn("Sequence with header '{}' has unrecognised compounds ({}), it will be ignored",
-									header, e.getMessage());
-						}
-
-						sb.setLength(0); //this is faster than allocating new buffers, better memory utilization (same buffer)
-					}
+					processedSequences = sbGreaterThanZero(header, sb, processedSequences, sequences);
 					header = line.substring(1);
-				} else if (line.startsWith(";")) {
-				} else {
-					//mark the start of the sequence with the fileIndex before the line was read
-					if(sb.length() == 0){
-						sequenceIndex = fileIndex;
-					}
-					sb.append(line);
-				}
+				} else
+					markStart(line, sb);
 			}
 			fileIndex = br.getBytesRead();
 
 			line = br.readLine();
 
 			if (line == null) {
-				//i.e. EOF
-				if ( sb.length() == 0 && header.length() != 0 ) {
+				// i.e. EOF
+				if (sb.length() == 0 && header.length() != 0) {
 					logger.warn("Can't parse sequence {}. Got sequence of length 0!", sequenceIndex);
 					logger.warn("header: {}", header);
 					header = null;
-				} else if ( sb.length() > 0 ) {
-					//logger.info("Sequence index=" + sequenceIndex + " " + fileIndex );
+				} else if (sb.length() > 0) {
+					// logger.info("Sequence index=" + sequenceIndex + " " + fileIndex );
 					try {
 						@SuppressWarnings("unchecked")
-						S sequence = (S)sequenceCreator.getSequence(sb.toString(), sequenceIndex);
+						S sequence = (S) sequenceCreator.getSequence(sb.toString(), sequenceIndex);
 						headerParser.parseHeader(header, sequence);
-						sequences.put(sequence.getAccession().getID(),sequence);
+						sequences.put(sequence.getAccession().getID(), sequence);
 						processedSequences++;
 						header = null;
 					} catch (CompoundNotFoundException e) {
@@ -209,25 +191,60 @@ public class FastaReader<S extends Sequence<?>, C extends Compound> {
 				}
 				keepGoing = false;
 			}
-			if (max > -1 && processedSequences>=max) {
-				keepGoing=false;
+			if (max > -1 && processedSequences >= max) {
+				keepGoing = false;
 			}
 		} while (keepGoing);
 
-		this.line  = line;
-		this.header= header;
+		this.line = line;
+		this.header = header;
 
-		return max > -1 && sequences.isEmpty() ? null :  sequences;
+		return max > -1 && sequences.isEmpty() ? null : sequences;
+	}
+
+	private void markStart(String line, StringBuilder sb) {
+		if (line.startsWith(";")) {
+		} else {
+			// mark the start of the sequence with the fileIndex before the line was read
+			if (sb.length() == 0) {
+				sequenceIndex = fileIndex;
+			}
+			sb.append(line);
+		}
+	}
+
+	private int sbGreaterThanZero(String header, StringBuilder sb, int processedSequences,
+			LinkedHashMap<String, S> sequences) throws IOException {
+		if (sb.length() > 0) {
+			// i.e. if there is already a sequence before
+			// logger.info("Sequence index=" + sequenceIndex);
+
+			try {
+				@SuppressWarnings("unchecked")
+				S sequence = (S) sequenceCreator.getSequence(sb.toString(), sequenceIndex);
+				headerParser.parseHeader(header, sequence);
+				sequences.put(sequence.getAccession().getID(), sequence);
+				processedSequences++;
+
+			} catch (CompoundNotFoundException e) {
+				logger.warn("Sequence with header '{}' has unrecognised compounds ({}), it will be ignored", header,
+						e.getMessage());
+			}
+
+			sb.setLength(0); // this is faster than allocating new buffers, better memory utilization (same
+								// buffer)
+		}
+		return processedSequences;
 	}
 
 	public void close() throws IOException {
 		br.close();
 		isr.close();
-		//If stream was created from File object then we need to close it
+		// If stream was created from File object then we need to close it
 		if (fi != null) {
 			fi.close();
 		}
-		this.line=this.header = null;
+		this.line = this.header = null;
 	}
-	
+
 }
