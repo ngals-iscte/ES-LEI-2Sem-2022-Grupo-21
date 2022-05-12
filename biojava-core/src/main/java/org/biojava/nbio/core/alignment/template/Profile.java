@@ -23,12 +23,12 @@
 
 package org.biojava.nbio.core.alignment.template;
 
+import java.util.List;
+
 import org.biojava.nbio.core.sequence.location.template.Location;
 import org.biojava.nbio.core.sequence.template.Compound;
 import org.biojava.nbio.core.sequence.template.CompoundSet;
 import org.biojava.nbio.core.sequence.template.Sequence;
-
-import java.util.List;
 
 /**
  * Defines a data structure for the results of sequence alignment.  Every {@link List} returned is unmodifiable unless

@@ -23,12 +23,10 @@
 
 package org.biojava.nbio.core.alignment.template;
 
-import org.biojava.nbio.core.alignment.template.Profile;
-import org.biojava.nbio.core.alignment.template.AlignedSequence;
+import java.util.List;
+
 import org.biojava.nbio.core.sequence.template.Compound;
 import org.biojava.nbio.core.sequence.template.Sequence;
-
-import java.util.List;
 
 /**
  * Defines a mutable (editable) data structure for a {@link Profile}.  Returned {@link List}s are modifiable.
