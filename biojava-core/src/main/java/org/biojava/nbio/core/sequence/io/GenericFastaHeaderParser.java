@@ -133,7 +133,12 @@ public class GenericFastaHeaderParser<S extends AbstractSequence<C>, C extends C
 			sequence.setAccession(new AccessionID(data[2], DataSource.PRF));
 		} else if (data[0].equalsIgnoreCase("pdb")) {
 			sequence.setAccession(new AccessionID(data[1] + ":" + data[2], DataSource.PDB1));
-		} else if (data[0].startsWith("PDB")) {
+		} else
+			extracted(sequence, data);
+	}
+
+	private void extracted(S sequence, String[] data) {
+		if (data[0].startsWith("PDB")) {
 			String[] pdbe = data[0].split(" ");
 			String[] pdbaccession = pdbe[0].split(":");
 			sequence.setAccession(new AccessionID(pdbaccession[1], DataSource.PDBe));
