@@ -54,9 +54,6 @@ public class SubstitutionMatrixHelper implements Serializable {
 	private static Map<String, SubstitutionMatrix<NucleotideCompound>> nucleotideMatrices =
 			new HashMap<String, SubstitutionMatrix<NucleotideCompound>>();
 
-	// prevents instantiation
-	private SubstitutionMatrixHelper() { }
-
 
 	/** Returns any matrix from the AAINDEX database file
 	 *
