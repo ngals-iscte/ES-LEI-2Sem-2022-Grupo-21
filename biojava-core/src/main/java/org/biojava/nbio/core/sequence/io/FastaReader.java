@@ -155,24 +155,7 @@ public class FastaReader<S extends Sequence<?>, C extends Compound> {
 			if (line.length() != 0) {
 				if (line.startsWith(">")) {//start of new fasta record
 
-					if (sb.length() > 0) {
-						//i.e. if there is already a sequence before
-						//logger.info("Sequence index=" + sequenceIndex);
-
-						try {
-							@SuppressWarnings("unchecked")
-							S sequence = (S)sequenceCreator.getSequence(sb.toString(), sequenceIndex);
-							headerParser.parseHeader(header, sequence);
-							sequences.put(sequence.getAccession().getID(),sequence);
-							processedSequences++;
-
-						} catch (CompoundNotFoundException e) {
-							logger.warn("Sequence with header '{}' has unrecognised compounds ({}), it will be ignored",
-									header, e.getMessage());
-						}
-
-						sb.setLength(0); //this is faster than allocating new buffers, better memory utilization (same buffer)
-					}
+					processedSequences = sbGreaterThanZero(header, sb, processedSequences, sequences);
 					header = line.substring(1);
 				} else if (line.startsWith(";")) {
 				} else {
@@ -218,6 +201,29 @@ public class FastaReader<S extends Sequence<?>, C extends Compound> {
 		this.header= header;
 
 		return max > -1 && sequences.isEmpty() ? null :  sequences;
+	}
+
+	private int sbGreaterThanZero(String header, StringBuilder sb, int processedSequences,
+			LinkedHashMap<String, S> sequences) throws IOException {
+		if (sb.length() > 0) {
+			//i.e. if there is already a sequence before
+			//logger.info("Sequence index=" + sequenceIndex);
+
+			try {
+				@SuppressWarnings("unchecked")
+				S sequence = (S)sequenceCreator.getSequence(sb.toString(), sequenceIndex);
+				headerParser.parseHeader(header, sequence);
+				sequences.put(sequence.getAccession().getID(),sequence);
+				processedSequences++;
+
+			} catch (CompoundNotFoundException e) {
+				logger.warn("Sequence with header '{}' has unrecognised compounds ({}), it will be ignored",
+						header, e.getMessage());
+			}
+
+			sb.setLength(0); //this is faster than allocating new buffers, better memory utilization (same buffer)
+		}
+		return processedSequences;
 	}
 
 	public void close() throws IOException {
