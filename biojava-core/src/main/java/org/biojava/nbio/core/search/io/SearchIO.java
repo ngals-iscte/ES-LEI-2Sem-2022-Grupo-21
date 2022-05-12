@@ -39,16 +39,10 @@ import java.util.NoSuchElementException;
  */
 
 public class SearchIO implements Iterable<Result>{
+	private SearchIOProduct searchIOProduct;
+
 	static private HashMap<String,ResultFactory> extensionFactoryAssociation;
 
-	final private ResultFactory factory;
-	final private File file;
-
-	/**
-	 * this threshold applies in retrieving hsp. Those having e-value below this
-	 * will not be loaded.
-	 */
-	private double evalueThreshold = Double.MAX_VALUE;
 	/**
 	 * contains one object per query sequence describing search results.
 	 * Sometime also referred as Iterations.
@@ -66,9 +60,8 @@ public class SearchIO implements Iterable<Result>{
 	 * @throws Exception
 	 */
 	public SearchIO (File f)  throws IOException, ParseException{
-		factory = guessFactory(f);
-		file = f;
-		if (file.exists()) readResults();
+		this.searchIOProduct = new SearchIOProduct(guessFactory(f), f);
+		if (searchIOProduct.getFile().exists()) searchIOProduct.readResults(this);
 	}
 
 	/**
@@ -82,9 +75,8 @@ public class SearchIO implements Iterable<Result>{
 	 * @throws java.text.ParseException for file format related issues
 	 */
 	public SearchIO (File f, ResultFactory factory) throws IOException, ParseException{
-		file = f;
-		this.factory = factory;
-		if (file.exists()) readResults();
+		this.searchIOProduct = new SearchIOProduct(f, factory);
+		if (searchIOProduct.getFile().exists()) searchIOProduct.readResults(this);
 	}
 	/**
 	 * Build a SearchIO reader, specify a ResultFactory object to be used for parsing
@@ -98,22 +90,9 @@ public class SearchIO implements Iterable<Result>{
 	 * @throws java.text.ParseException for file format related issues
 	 */
 	public SearchIO(File f, ResultFactory factory, double maxEvalue) throws IOException, ParseException{
-		file = f;
-		this.factory = factory;
-		this.evalueThreshold = maxEvalue;
-		if (file.exists()) readResults();
-	}
-
-	/**
-	 * This method is declared private because it is the default action of constructor
-	 * when file exists
-	 *
-	 * @throws java.io.IOException for file access related issues
-	 * @throws java.text.ParseException for file format related issues
-	 */
-	private void readResults() throws IOException, ParseException {
-		factory.setFile(file);
-		results = factory.createObjects(evalueThreshold);
+		this.searchIOProduct = new SearchIOProduct(f, factory);
+		searchIOProduct.setEvalueThreshold(maxEvalue);
+		if (searchIOProduct.getFile().exists()) searchIOProduct.readResults(this);
 	}
 
 	/**
@@ -123,8 +102,7 @@ public class SearchIO implements Iterable<Result>{
 	 * @throws java.text.ParseException for file format related issues
 	 */
 	public void writeResults() throws IOException, ParseException {
-		factory.setFile(file);
-		factory.createObjects(evalueThreshold);
+		searchIOProduct.writeResults();
 	}
 
 	/**
@@ -159,7 +137,7 @@ public class SearchIO implements Iterable<Result>{
 	}
 
 	public double getEvalueThreshold() {
-		return evalueThreshold;
+		return searchIOProduct.getEvalueThreshold();
 	}
 
 	@Override
@@ -184,5 +162,9 @@ public class SearchIO implements Iterable<Result>{
 				throw new UnsupportedOperationException("The remove operation is not supported by this iterator");
 			}
 		};
+	}
+
+	public void setResults(List<Result> results) {
+		this.results = results;
 	}
 }
