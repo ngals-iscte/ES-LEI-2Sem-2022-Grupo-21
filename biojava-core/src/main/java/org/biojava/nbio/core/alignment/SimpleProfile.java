@@ -431,21 +431,8 @@ public class SimpleProfile<S extends Sequence<C>, C extends Compound> implements
 						aligIndFormat, i, start, end);
 
 				int counter = 0;
-				for (AlignedSequence<S, C> as : list) {
-					counter++;
-
-					if ( webDisplay && list.size() == 2){
-						printSequenceAlignmentWeb(s, counter, idFormat, seqIndexPre, seqIndexFormatPre, seqIndexPost,
-								seqIndexFormatPost, start, end);
-					} else {
-						toStringHelper(idFormat, seqIndexPre, seqIndexPost, s, seqIndexFormatPre, seqIndexFormatPost,
-								start, end, as);
-					}
-
-					if (aligConservation && list.size() == 2 && counter == 1) {
-						printConservation(s, idFormat, seqIndexPad, seqIndexPre, start, end, webDisplay);
-					}
-				}
+				alignedSequenceIterator(idFormat, seqIndexPre, seqIndexPost, aligConservation, webDisplay, s,
+						seqIndexPad, seqIndexFormatPre, seqIndexFormatPost, start, end, counter);
 
 			}
 		} else {
@@ -456,6 +443,26 @@ public class SimpleProfile<S extends Sequence<C>, C extends Compound> implements
 			s.append(IOUtils.getPDBLegend());
 		}
 		return s.toString();
+	}
+
+	private void alignedSequenceIterator(String idFormat, boolean seqIndexPre, boolean seqIndexPost,
+			boolean aligConservation, boolean webDisplay, StringBuilder s, int seqIndexPad, String seqIndexFormatPre,
+			String seqIndexFormatPost, int start, int end, int counter) {
+		for (AlignedSequence<S, C> as : list) {
+			counter++;
+
+			if ( webDisplay && list.size() == 2){
+				printSequenceAlignmentWeb(s, counter, idFormat, seqIndexPre, seqIndexFormatPre, seqIndexPost,
+						seqIndexFormatPost, start, end);
+			} else {
+				toStringHelper(idFormat, seqIndexPre, seqIndexPost, s, seqIndexFormatPre, seqIndexFormatPost,
+						start, end, as);
+			}
+
+			if (aligConservation && list.size() == 2 && counter == 1) {
+				printConservation(s, idFormat, seqIndexPad, seqIndexPre, start, end, webDisplay);
+			}
+		}
 	}
 
 	private void appendString(boolean webDisplay, StringBuilder s) {
