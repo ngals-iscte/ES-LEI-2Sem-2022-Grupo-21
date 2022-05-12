@@ -118,16 +118,7 @@ public class GenericFastaHeaderParser<S extends AbstractSequence<C>, C extends C
 		if (data.length == 1) {
 			sequence.setAccession(new AccessionID(data[0]));
 		} else if (data[0].equalsIgnoreCase("sp") || data[0].equalsIgnoreCase("tr")) {
-			if (data[0].equalsIgnoreCase("sp")) {
-				sequence.setAnnotationType(AnnotationType.CURATED);
-			} else {
-				sequence.setAnnotationType(AnnotationType.PREDICTED);
-			}
-
-			sequence.setAccession(new AccessionID(data[1], DataSource.UNIPROT));
-			if (data.length > 2) {
-				sequence.setDescription(data[2]);
-			}
+			sp(sequence, data);
 
 		} else if (data[0].equalsIgnoreCase("gi")) {
 			DataSource giSource = giSource(data);
@@ -161,6 +152,19 @@ public class GenericFastaHeaderParser<S extends AbstractSequence<C>, C extends C
 		} else {
 			sequence.setAccession(new AccessionID(data[0])); // avoid the common problem of picking up all the comments
 																// original header in getOriginalHeader
+		}
+	}
+
+	private void sp(S sequence, String[] data) {
+		if (data[0].equalsIgnoreCase("sp")) {
+			sequence.setAnnotationType(AnnotationType.CURATED);
+		} else {
+			sequence.setAnnotationType(AnnotationType.PREDICTED);
+		}
+
+		sequence.setAccession(new AccessionID(data[1], DataSource.UNIPROT));
+		if (data.length > 2) {
+			sequence.setDescription(data[2]);
 		}
 	}
 
