@@ -41,12 +41,11 @@ import org.biojava.nbio.core.sequence.template.Sequence;
  */
 
 public abstract class Result implements Iterable<Hit>{
+	private ResultProduct resultProduct = new ResultProduct();
 	private String program;
 	private String version;
 	private String reference;
 	private String dbFile;
-
-	private HashMap<String,String> programSpecificParameters;
 
 	private int iterationNumber;
 	private String queryID;
@@ -61,7 +60,7 @@ public abstract class Result implements Iterable<Hit>{
 		this.version = version;
 		this.reference = reference;
 		this.dbFile = dbFile;
-		this.programSpecificParameters = programSpecificParameters;
+		resultProduct.setProgramSpecificParameters(programSpecificParameters);
 		this.iterationNumber = iterationNumber;
 		this.queryID = queryID;
 		this.queryDef = queryDef;
@@ -143,11 +142,11 @@ public abstract class Result implements Iterable<Hit>{
 	}
 
 	public Set<String> getProgramSpecificParametersList() {
-		return programSpecificParameters.keySet();
+		return resultProduct.getProgramSpecificParametersList();
 	}
 
 	public String getProgramSpecificParameter(String key) {
-		return programSpecificParameters.get(key);
+		return resultProduct.getProgramSpecificParameter(key);
 	}
 	/**
 	 * returns the reference to the original and whole sequence used to query the database.
