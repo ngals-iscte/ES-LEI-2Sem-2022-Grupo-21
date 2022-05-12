@@ -55,17 +55,6 @@ public class SubstitutionMatrixHelper implements Serializable {
 			new HashMap<String, SubstitutionMatrix<NucleotideCompound>>();
 
 
-	/** Returns any matrix from the AAINDEX database file
-	 *
-	 * @param matrixName
-	 * @return a {@link SubstitutionMatrix}
-	 */
-	public static SubstitutionMatrix<AminoAcidCompound> getMatrixFromAAINDEX(String matrixName){
-
-		return AAindexFactory.getAAIndexProvider().getMatrix(matrixName);
-
-	}
-
 
 	/**
 	 * Returns Blosum 30 matrix by Henikoff & Henikoff
