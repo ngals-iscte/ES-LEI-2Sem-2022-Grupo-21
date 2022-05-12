@@ -415,11 +415,7 @@ public class SimpleProfile<S extends Sequence<C>, C extends Compound> implements
 			boolean interlaced, boolean aligIndices, boolean aligConservation, boolean webDisplay) {
 
 		StringBuilder s = (header == null) ? new StringBuilder() : new StringBuilder(header);
-
-		if ( webDisplay && list.size() == 2){
-			s.append("<div><pre>");
-		}
-
+		appendString(webDisplay, s);
 		width = Math.max(1, width);
 		int seqIndexPad = (int) (Math.floor(Math.log10(getLength())) + 2);
 		String seqIndexFormatPre = "%" + seqIndexPad + "d ", seqIndexFormatPost = "%" + seqIndexPad + "d";
@@ -460,6 +456,12 @@ public class SimpleProfile<S extends Sequence<C>, C extends Compound> implements
 			s.append(IOUtils.getPDBLegend());
 		}
 		return s.toString();
+	}
+
+	private void appendString(boolean webDisplay, StringBuilder s) {
+		if ( webDisplay && list.size() == 2){
+			s.append("<div><pre>");
+		}
 	}
 
 	private void toStringHelper(String idFormat, boolean seqIndexPre, boolean seqIndexPost, StringBuilder s,
