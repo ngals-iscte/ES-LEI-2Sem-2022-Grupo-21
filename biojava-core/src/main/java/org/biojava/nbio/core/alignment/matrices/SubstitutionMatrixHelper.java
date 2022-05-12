@@ -77,14 +77,6 @@ public class SubstitutionMatrixHelper implements Serializable {
 		return aminoAcidMatrices.get(file);
 	}
 
-	// reads in a nucleotide substitution matrix, if necessary
-	private static SubstitutionMatrix<NucleotideCompound> getNucleotideMatrix(String file) {
-		if (!nucleotideMatrices.containsKey(file)) {
-			nucleotideMatrices.put(file, new SimpleSubstitutionMatrix<NucleotideCompound>(
-					AmbiguityDNACompoundSet.getDNACompoundSet(), getReader(file), file));
-		}
-		return nucleotideMatrices.get(file);
-	}
 
 	// reads in a substitution matrix from a resource file
 	private static InputStreamReader getReader(String file) {
