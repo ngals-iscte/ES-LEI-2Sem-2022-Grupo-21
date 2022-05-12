@@ -432,20 +432,8 @@ public class SimpleProfile<S extends Sequence<C>, C extends Compound> implements
 				if (i > 0) {
 					s.append(String.format("%n"));
 				}
-				if (aligIndices) {
-					if (end < i + width) {
-						int line = end - start + 1;
-						aligIndFormat = "%-" + Math.max(1, line / 2) + "d %" + Math.max(1, line - (line / 2) - 1) +
-						"d%n";
-					}
-					if (idFormat != null) {
-						s.append(String.format(idFormat, ""));
-					}
-					if (seqIndexPre) {
-						s.append(String.format("%" + (seqIndexPad + 1) + "s", ""));
-					}
-					s.append(String.format(aligIndFormat, start, end));
-				}
+				aligIndFormat = checkAligIndices(width, idFormat, seqIndexPre, aligIndices, s, seqIndexPad,
+						aligIndFormat, i, start, end);
 
 				int counter = 0;
 				for (AlignedSequence<S, C> as : list) {
@@ -499,6 +487,25 @@ public class SimpleProfile<S extends Sequence<C>, C extends Compound> implements
 			s.append(IOUtils.getPDBLegend());
 		}
 		return s.toString();
+	}
+
+	private String checkAligIndices(int width, String idFormat, boolean seqIndexPre, boolean aligIndices,
+			StringBuilder s, int seqIndexPad, String aligIndFormat, int i, int start, int end) {
+		if (aligIndices) {
+			if (end < i + width) {
+				int line = end - start + 1;
+				aligIndFormat = "%-" + Math.max(1, line / 2) + "d %" + Math.max(1, line - (line / 2) - 1) +
+				"d%n";
+			}
+			if (idFormat != null) {
+				s.append(String.format(idFormat, ""));
+			}
+			if (seqIndexPre) {
+				s.append(String.format("%" + (seqIndexPad + 1) + "s", ""));
+			}
+			s.append(String.format(aligIndFormat, start, end));
+		}
+		return aligIndFormat;
 	}
 
 	private void printSequenceAlignmentWeb(StringBuilder s, int counter, String idFormat, boolean seqIndexPre,
