@@ -63,13 +63,7 @@ public class SubstitutionMatrixHelper implements Serializable {
 		return getAminoAcidMatrix("blosum65");
 	}
 
-	/**
-	 * Returns Blosum 70 matrix by Henikoff & Henikoff
-	 * @return Blosum 70 matrix
-	 */
-	public static SubstitutionMatrix<AminoAcidCompound> getBlosum70() {
-		return getAminoAcidMatrix("blosum70");
-	}
+
 
 	/**
 	 * Returns Blosum 75 matrix by Henikoff & Henikoff
