@@ -231,26 +231,7 @@ public class ABITrace {
 		int basenum = 0;
 		for (int q = 1; q <= 5; q++) {
 			for (int x = 0; x <= traceLength - 2; x++) {
-				if (q == 1) {
-					g.setColor(acolor);
-					g.drawLine(widthScale * x, transmute(A[x], imageHeight, scale),
-							widthScale * (x + 1), transmute(A[x + 1], imageHeight, scale));
-				}
-				if (q == 2) {
-					g.setColor(ccolor);
-					g.drawLine(widthScale * x, transmute(C[x], imageHeight, scale),
-							widthScale * (x + 1), transmute(C[x + 1], imageHeight, scale));
-				}
-				if (q == 3) {
-					g.setColor(tcolor);
-					g.drawLine(widthScale * x, transmute(T[x], imageHeight, scale),
-							widthScale * (x + 1), transmute(T[x + 1], imageHeight, scale));
-				}
-				if (q == 4) {
-					g.setColor(gcolor);
-					g.drawLine(widthScale * x, transmute(G[x], imageHeight, scale),
-							widthScale * (x + 1), transmute(G[x + 1], imageHeight, scale));
-				}
+				recolorAndDraw(imageHeight, widthScale, g, acolor, ccolor, gcolor, tcolor, scale, q, x);
 				if (q == 5) {
 					if ((here > bc.length - 1) || (basenum > seq.length - 1)) break;
 					if (bc[here] == x) {
@@ -275,6 +256,30 @@ public class ABITrace {
 			}
 		}
 		return out;
+	}
+
+	private void recolorAndDraw(int imageHeight, int widthScale, Graphics2D g, Color acolor, Color ccolor, Color gcolor,
+			Color tcolor, double scale, int q, int x) {
+		if (q == 1) {
+			g.setColor(acolor);
+			g.drawLine(widthScale * x, transmute(A[x], imageHeight, scale),
+					widthScale * (x + 1), transmute(A[x + 1], imageHeight, scale));
+		}
+		if (q == 2) {
+			g.setColor(ccolor);
+			g.drawLine(widthScale * x, transmute(C[x], imageHeight, scale),
+					widthScale * (x + 1), transmute(C[x + 1], imageHeight, scale));
+		}
+		if (q == 3) {
+			g.setColor(tcolor);
+			g.drawLine(widthScale * x, transmute(T[x], imageHeight, scale),
+					widthScale * (x + 1), transmute(T[x + 1], imageHeight, scale));
+		}
+		if (q == 4) {
+			g.setColor(gcolor);
+			g.drawLine(widthScale * x, transmute(G[x], imageHeight, scale),
+					widthScale * (x + 1), transmute(G[x + 1], imageHeight, scale));
+		}
 	}
 
 	private void checkSeq(Graphics2D g, Color acolor, Color ccolor, Color gcolor, Color tcolor, Color ncolor,
