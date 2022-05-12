@@ -66,21 +66,6 @@ public class SubstitutionMatrixHelper implements Serializable {
 
 	}
 
-	/**
-	 * Gets identity matrix where matches score 1 and mismatches score -10000
-	 * @return
-	 */
-	public static SubstitutionMatrix<AminoAcidCompound> getIdentity() {
-		return getAminoAcidMatrix("identity");
-	}
-
-	/**
-	 * Returns Blosum 100 matrix by Henikoff & Henikoff
-	 * @return Blosum 100 matrix
-	 */
-	public static SubstitutionMatrix<AminoAcidCompound> getBlosum100() {
-		return getAminoAcidMatrix("blosum100");
-	}
 
 	/**
 	 * Returns Blosum 30 matrix by Henikoff & Henikoff
