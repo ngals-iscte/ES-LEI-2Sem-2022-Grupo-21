@@ -65,14 +65,6 @@ public class SubstitutionMatrixHelper implements Serializable {
 
 
 	/**
-	 * Returns PAM 250 matrix by Gonnet, Cohen & Benner
-	 * @return Gonnet 250 matrix
-	 */
-	public static SubstitutionMatrix<AminoAcidCompound> getGonnet250() {
-		return getAminoAcidMatrix("gonnet250");
-	}
-
-	/**
 	 * Returns Nuc 4.2 matrix by Lowe
 	 * Only the first nucleotide sequence to align can contain ambiguous nucleotides
 	 * @return Nuc 4.2 matrix
