@@ -21,22 +21,13 @@
  */
 package org.biojava.nbio.core.sequence.io;
 
-import org.biojava.nbio.core.sequence.ProteinSequence;
-import org.biojava.nbio.core.sequence.compound.AminoAcidCompound;
-import org.biojava.nbio.core.sequence.compound.AminoAcidCompoundSet;
-import org.biojava.nbio.core.sequence.io.template.FastaHeaderFormatInterface;
-import org.biojava.nbio.core.sequence.template.Compound;
-import org.biojava.nbio.core.sequence.template.Sequence;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.BufferedOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
-import java.util.LinkedHashMap;
+
+import org.biojava.nbio.core.sequence.io.template.FastaHeaderFormatInterface;
+import org.biojava.nbio.core.sequence.template.Compound;
+import org.biojava.nbio.core.sequence.template.Sequence;
 
 /**
  * The FastaWriter writes a collection of sequences to an outputStream. FastaWriterHelper should be
@@ -47,8 +38,6 @@ import java.util.LinkedHashMap;
  * @author Scooter Willis <willishf at gmail dot com>
  */
 public class FastaWriter<S extends Sequence<?>, C extends Compound> {
-
-	private final static Logger logger = LoggerFactory.getLogger(FastaWriter.class);
 
 	OutputStream os;
 	Collection<S> sequences;
