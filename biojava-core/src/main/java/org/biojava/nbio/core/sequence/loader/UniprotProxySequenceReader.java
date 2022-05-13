@@ -1,3 +1,4 @@
+
 /*
  *                    BioJava development code
  *
@@ -367,6 +368,8 @@ public class UniprotProxySequenceReader<C extends Compound> implements ProxySequ
 
 		return getProteinAliases();
 	}
+	
+
 	/**
 	 * Pull uniprot protein aliases associated with this sequence
 	 * @return
@@ -380,25 +383,17 @@ public class UniprotProxySequenceReader<C extends Compound> implements ProxySequ
 		Element uniprotElement = uniprotDoc.getDocumentElement();
 		Element entryElement = XMLHelper.selectSingleElement(uniprotElement, "entry");
 		Element proteinElement = XMLHelper.selectSingleElement(entryElement, "protein");
-		
 		ArrayList<Element> keyWordElementList;
 		getProteinAliasesFromNameGroup(aliasList, proteinElement);
-		
-		keyWordElementList = XMLHelper.selectElements(proteinElement, "component");
-		for (Element element : keyWordElementList) {
-			getProteinAliasesFromNameGroup(aliasList, element);
-		}
+		extracted2(aliasList, proteinElement);
+		extracted3(aliasList, proteinElement);
+		extracted(aliasList, proteinElement);
 
-		keyWordElementList = XMLHelper.selectElements(proteinElement, "domain");
-		for (Element element : keyWordElementList) {
-			getProteinAliasesFromNameGroup(aliasList, element);
-		}
+		return aliasList;
+	}
 
-		keyWordElementList = XMLHelper.selectElements(proteinElement, "submittedName");
-		for (Element element : keyWordElementList) {
-			getProteinAliasesFromNameGroup(aliasList, element);
-		}
-
+	private void extracted3(ArrayList<String> aliasList, Element proteinElement) throws XPathExpressionException {
+		ArrayList<Element> keyWordElementList;
 		keyWordElementList = XMLHelper.selectElements(proteinElement, "cdAntigenName");
 		for (Element element : keyWordElementList) {
 			String cdAntigenName = element.getTextContent();
@@ -414,7 +409,28 @@ public class UniprotProxySequenceReader<C extends Compound> implements ProxySequ
 				aliasList.add(cdAntigenName);
 			}
 		}
+	}
 
+	private void extracted2(ArrayList<String> aliasList, Element proteinElement) throws XPathExpressionException {
+		ArrayList<Element> keyWordElementList;
+		keyWordElementList = XMLHelper.selectElements(proteinElement, "component");
+		for (Element element : keyWordElementList) {
+			getProteinAliasesFromNameGroup(aliasList, element);
+		}
+
+		keyWordElementList = XMLHelper.selectElements(proteinElement, "domain");
+		for (Element element : keyWordElementList) {
+			getProteinAliasesFromNameGroup(aliasList, element);
+		}
+
+		keyWordElementList = XMLHelper.selectElements(proteinElement, "submittedName");
+		for (Element element : keyWordElementList) {
+			getProteinAliasesFromNameGroup(aliasList, element);
+		}
+	}
+
+	private void extracted(ArrayList<String> aliasList, Element proteinElement) throws XPathExpressionException {
+		ArrayList<Element> keyWordElementList;
 		keyWordElementList = XMLHelper.selectElements(proteinElement, "biotechName");
 		for (Element element : keyWordElementList) {
 			String cdAntigenName = element.getTextContent();
@@ -430,8 +446,6 @@ public class UniprotProxySequenceReader<C extends Compound> implements ProxySequ
 				aliasList.add(cdAntigenName);
 			}
 		}
-
-		return aliasList;
 	}
 
 	/**
