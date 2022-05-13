@@ -154,120 +154,128 @@ public class InsdcParser {
 	private List<Location> parseLocationString(String string, int versus) throws ParserException {
 		Matcher m;
 		List<Location> boundedLocationsCollection = new ArrayList<Location>();
-
 		List<String> tokens = splitString(string);
-		for (String t : tokens) {
-			m = genbankSplitPattern.matcher(t);
-			if (!m.find()) {
-				throw new ParserException("Cannot interpret split pattern " + t
-						+ "\nin location string:" + string);
-			}
-			String splitQualifier = m.group(1);
-			String splitString = m.group(2);
-
-			if (!splitQualifier.isEmpty()) {
-				//recursive case
-				int localVersus = splitQualifier.equalsIgnoreCase("complement") ? -1 : 1;
-				List<Location> subLocations = parseLocationString(
-						splitString, versus * localVersus);
-
-				switch (complexFeaturesAppendMode) {
-					case FLATTEN:
-						boundedLocationsCollection.addAll(subLocations);
-						break;
-					case HIERARCHICAL:
-						if (subLocations.size() == 1) {
-							boundedLocationsCollection.addAll(subLocations);
-						} else {
-							Point min = Location.Tools.getMin(subLocations).getStart();
-							Point max = Location.Tools.getMax(subLocations).getEnd();
-							AbstractLocation motherLocation
-									= new SimpleLocation(
-											min,
-											max
-									);
-
-							if (splitQualifier.equalsIgnoreCase("join")) {
-								motherLocation = new InsdcLocations.GroupLocation(subLocations);
-							}
-							if (splitQualifier.equalsIgnoreCase("order")) {
-								motherLocation = new InsdcLocations.OrderLocation(subLocations);
-							}
-							if (splitQualifier.equalsIgnoreCase("bond")) {
-								motherLocation = new InsdcLocations.BondLocation(subLocations);
-							}
-							motherLocation.setStrand(getGroupLocationStrand(subLocations));
-							boundedLocationsCollection.add(motherLocation);
-						}
-					break;
-				}
-			} else {
-				//base case
-				m = singleLocationPattern.matcher(splitString);
-				if (!m.find()) {
-					throw new ParserException("Cannot interpret location pattern " + splitString
-							+ "\nin location string:" + string);
-				}
-
-				String accession = m.group(1);
-				Strand s = versus == 1 ? Strand.POSITIVE : Strand.NEGATIVE;
-				int start = Integer.valueOf(m.group(3));
-				int end = m.group(6) == null ? start : Integer.valueOf(m.group(6));
-
-				if (featureGlobalStart > start) {
-					featureGlobalStart = start;
-				}
-				if (featureGlobalEnd < end) {
-					featureGlobalEnd = end;
-				}
-
-				AbstractLocation l;
-				if (start <= end) {
-					l = new SimpleLocation(
-							start,
-							end,
-							s
-					);
-				} else {
-					// in case of location spanning the end point, Location contract wants sublocations
-					AbstractLocation l5prime = new SimpleLocation(
-							1,
-							end,
-							Strand.UNDEFINED
-							);
-					AbstractLocation l3prime = new SimpleLocation(
-							start,
-							(int) sequenceLength,
-							Strand.UNDEFINED
-							);
-
-					l = new InsdcLocations.GroupLocation(
-							new SimplePoint(start),
-							new SimplePoint(end),
-							s,
-							isSequenceCircular,
-							l5prime, l3prime
-					);
-
-				}
-
-				if(m.group(4) != null && m.group(4).equals("^")) l.setBetweenCompounds(true);
-
-				if (m.group(2).equals("<")) {
-					l.setPartialOn5prime(true);
-				}
-				if (m.group(5) != null && (m.group(5).equals(">") || m.group(7).equals(">"))) {
-					l.setPartialOn3prime(true);
-				}
-
-				if (!(accession == null || "".equals(accession))) l.setAccession(new AccessionID(accession));
-
-				boundedLocationsCollection.add(l);
-
-			}
-		}
+		for (String t : tokens)
+			extracted4(string, versus, boundedLocationsCollection, t);
 
 		return boundedLocationsCollection;
+	}
+
+	private void extracted4(String string, int versus, List<Location> boundedLocationsCollection, String t) {
+		Matcher m;
+		m = genbankSplitPattern.matcher(t);
+		if (!m.find()) {
+			throw new ParserException("Cannot interpret split pattern " + t
+					+ "\nin location string:" + string);
+		}
+		String splitQualifier = m.group(1);
+		String splitString = m.group(2);
+		if (!splitQualifier.isEmpty()) {
+			//recursive case
+			int localVersus = splitQualifier.equalsIgnoreCase("complement") ? -1 : 1;
+			List<Location> subLocations = parseLocationString(
+					splitString, versus * localVersus);
+
+			extracted2(boundedLocationsCollection, splitQualifier, subLocations);
+		} else {
+			//base case
+			m = singleLocationPattern.matcher(splitString);
+			if (!m.find()) {
+				throw new ParserException("Cannot interpret location pattern " + splitString
+						+ "\nin location string:" + string);
+			}
+			String accession = m.group(1);
+			Strand s = versus == 1 ? Strand.POSITIVE : Strand.NEGATIVE;
+			int start = Integer.valueOf(m.group(3));
+			int end = m.group(6) == null ? start : Integer.valueOf(m.group(6));
+			extracted3(start, end);
+			AbstractLocation l;
+			if (start <= end) {
+				l = new SimpleLocation(
+						start,
+						end,
+						s
+				);
+			} else {
+				// in case of location spanning the end point, Location contract wants sublocations
+				AbstractLocation l5prime = new SimpleLocation(
+						1,
+						end,
+						Strand.UNDEFINED
+						);
+				AbstractLocation l3prime = new SimpleLocation(
+						start,
+						(int) sequenceLength,
+						Strand.UNDEFINED
+						);
+
+				l = new InsdcLocations.GroupLocation(
+						new SimplePoint(start),
+						new SimplePoint(end),
+						s,
+						isSequenceCircular,
+						l5prime, l3prime
+				);
+			}
+			extracted(m, accession, l);
+			boundedLocationsCollection.add(l);
+		}
+	}
+
+	private void extracted3(int start, int end) {
+		if (featureGlobalStart > start) {
+			featureGlobalStart = start;
+		}
+		if (featureGlobalEnd < end) {
+			featureGlobalEnd = end;
+		}
+	}
+
+	private void extracted2(List<Location> boundedLocationsCollection, String splitQualifier,
+			List<Location> subLocations) {
+		switch (complexFeaturesAppendMode) {
+			case FLATTEN:
+				boundedLocationsCollection.addAll(subLocations);
+				break;
+			case HIERARCHICAL:
+				if (subLocations.size() == 1) {
+					boundedLocationsCollection.addAll(subLocations);
+				} else {
+					Point min = Location.Tools.getMin(subLocations).getStart();
+					Point max = Location.Tools.getMax(subLocations).getEnd();
+					AbstractLocation motherLocation
+							= new SimpleLocation(
+									min,
+									max
+							);
+
+					if (splitQualifier.equalsIgnoreCase("join")) {
+						motherLocation = new InsdcLocations.GroupLocation(subLocations);
+					}
+					if (splitQualifier.equalsIgnoreCase("order")) {
+						motherLocation = new InsdcLocations.OrderLocation(subLocations);
+					}
+					if (splitQualifier.equalsIgnoreCase("bond")) {
+						motherLocation = new InsdcLocations.BondLocation(subLocations);
+					}
+					motherLocation.setStrand(getGroupLocationStrand(subLocations));
+					boundedLocationsCollection.add(motherLocation);
+				}
+			break;
+		}
+	}
+
+	private void extracted(Matcher m, String accession, AbstractLocation l) {
+		if(m.group(4) != null && m.group(4).equals("^")) l.setBetweenCompounds(true);
+
+		if (m.group(2).equals("<")) {
+			l.setPartialOn5prime(true);
+		}
+		if (m.group(5) != null && (m.group(5).equals(">") || m.group(7).equals(">"))) {
+			l.setPartialOn3prime(true);
+		}
+
+		if (!(accession == null || "".equals(accession))) l.setAccession(new AccessionID(accession));
 	}
 
 
